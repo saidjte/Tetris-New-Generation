@@ -18,7 +18,7 @@
 
 Grab the latest installable APK from **[GitHub Releases](../../releases)**:
 
-1. Open the [Releases page](../../releases) and download the APK from the **latest release** (currently v1.2.0).
+1. Open the [Releases page](../../releases) and download the APK from the **latest release** (currently v1.3.0).
 2. On your Android phone, open the file and allow *Install unknown apps* for your browser/file manager if asked.
 3. Install and play — no account, no internet, no ads.
 
@@ -46,9 +46,10 @@ You can also build it yourself (see below) or download the APK artifact from any
   - **Practice / الممارسة** — relaxed speed for training.
 - **Guideline-style engine** in pure Kotlin: SRS rotation with wall kicks, 7-bag randomizer, hold, ghost piece, 5-piece preview, lock delay with reset cap, T-spin detection with **full vs mini distinction**, back-to-back, combos, perfect clears, guideline speed curve and scoring.
 - **Animated color-coded event banners** for Tetris / T-Spin / Mini T-Spin / Back-to-Back / Perfect Clear / Combo / Level-up (AR/EN) — spring pop-in, gentle pulse, per-event colors and durations, haptic confirmation.
-- **Local store** — 13 visual themes (Neon Cyber, Galaxy, Aurora, Minimal, Retro Arcade, Crystal, Lava, Ocean, Monochrome, Golden, Nature, Pixel Art + default), 5 block packs, 5 effect packs and 4 sound packs. Bought with locally earned coins; atomic purchase logic can never double-charge. Catalog lives in `assets/store.json` (prices editable without code changes).
+- **Juicy presentation FX (v1.3.0)** — cleared rows burn away with white-hot beams, floating "+points" popups, screen shake scaled to the moment (hard drop / T-spin / Tetris / perfect clear), shockwave rings, a combo-heat glow on the board frame, breathing ghost piece, and a 3·2·1·GO! countdown with sound before every fresh round.
+- **Local store** — 13 visual themes (Neon Cyber, Galaxy, Aurora, Minimal, Retro Arcade, Crystal, Lava, Ocean, Monochrome, Golden, Nature, Pixel Art + default), 5 block packs, 5 effect packs (each with a distinct particle look: sparks, burst, trail, shatter, confetti) and 4 sound packs. Bought with locally earned coins; atomic purchase logic can never double-charge. Catalog lives in `assets/store.json` (prices editable without code changes).
 - **Progression** — XP/levels, coins, 16 permanent achievements, 3 rotating daily tasks, per-mode best scores, lifetime statistics and a post-round summary with rewards.
-- **Audio** — 4 procedurally generated SFX packs + 3 original music loops (menu / play / zen), separate volume controls, auto-pause on background. All files are local WAVs created by `scripts/gen_audio.py` (no licensing risk, no downloads).
+- **Audio** — 4 procedurally generated SFX packs (15 events each, layered synthesis: sub-octave + detune + shimmer sweeps) + 3 original music loops (menu / play / zen), separate volume controls, auto-pause on background. All files are local WAVs created by `scripts/gen_audio.py` (63 files total; no licensing risk, no downloads).
 - **Bilingual UI** — full Arabic + English with automatic **RTL/LTR** switching, per-app language setting.
 - **Comfort options** — dark themes, reduced-motion mode, haptics toggle, per-channel volumes, **optional full-screen touch gestures** (tap = rotate, swipe = move, slow drag down = soft drop, fast flick down = hard drop, swipe up = hold — every action haptic-confirmed) alongside the always-available button pad.
 - **First-run help + result sharing** — a bilingual "How to play" screen (shown once, always in the menu) and one-tap sharing of round results.

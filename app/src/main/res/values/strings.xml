@@ -42,6 +42,7 @@
     <string name="hud_goal">Goal</string>
     <string name="hud_combo">Combo ×%1$d</string>
     <string name="hud_tetris">TETRIS!</string>
+    <string name="countdown_go">GO!</string>
     <string name="hud_tspin">T-SPIN!</string>
     <string name="hud_back_to_back">Back-to-Back!</string>
     <string name="hud_perfect">PERFECT CLEAR!</string>

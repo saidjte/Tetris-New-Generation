@@ -31,6 +31,36 @@
 - Release flow: bump `versionCode` + `versionName` → add a CHANGELOG entry → commit → `git tag vX.Y.Z && git push origin vX.Y.Z` → CI runs tests, builds, and publishes the release with the APK automatically.
 - CI guard: a tag not matching `versionName` fails the build with a clear error.
 
+## [1.3.0] — 2026-10-26
+
+### Added | إضافات
+- **«العرض والصوت» — the presentation & audio release.** The paid effect packs finally render, every moment now looks and sounds the part. All items were mined from a code audit of the project's own spec files (see `docs/DEV_PLAN_V1.3.0.md`).
+- **Effect packs now actually visible** (was: purchased packs changed nothing on screen):
+  - **Sparks** = long flying rays, **Burst** = circles (previous look), **Trail** = velocity streaks, **Shatter** = tumbling rotating squares, **Confetti** = fluttering ribbons.
+  - Particle count now follows the purchased pack's density (with per-moment multipliers for TETRIS / T-SPIN / PERFECT / RECORD / COMBO).
+- **Cleared-row beams**: every removed line burns away with a white-hot sweep (~260 ms, ease-out) — powered by a new engine capability.
+- **Floating score popups**: "+N" (the actual points earned) pops in, rises and fades on every clear.
+- **Screen shake**: hard drop 4 px, T-spin 6 px, Tetris 8 px, perfect clear 10 px — damped sine that always lands back exactly in place (disabled under reduced-motion).
+- **Shockwave ring** expands from the board center on Tetris and perfect clear.
+- **Combo heat glow**: the board frame warms up orange, growing thicker as the combo chain grows (full heat at combo 5).
+- **Ghost piece breathing**: ghost outline alpha breathes 0.14 ↔ 0.34 over ~950 ms (constant under reduced-motion).
+- **Round-start countdown**: 3 · 2 · 1 · GO! overlay with its own sounds and haptic ticks before every fresh round (skipped when resuming a saved session; the round opens with the GO flash).
+- **Time-warning beep**: timed modes (Time Attack / Quick Play / challenges) beep once in the final 10 seconds.
+- **Richer sound synthesis v2** (all 4 packs regenerated): sub-octave body layer + gently detuned partner oscillator per note, upward shimmer sweeps under success arpeggios, sharp noise transients on percussive hits — pack personalities preserved (original = warm sine, arcade = chip square, future = FM bell, calm = soft triangle). Deterministic seeds (no more per-run randomness).
+- **2 new events × 4 packs**: `countdown` beep + `go` flash → audio set is now **63 files** (60 SFX + 3 music).
+- **Engine capability (B1)**: `LinesCleared` now carries `clearedRows` (pre-collapse indices) with a source-compatible default — the door for row-level visual effects.
+- **Pure FX math**: new `ui/fx` package — `FxMath` (shake/beam/ring/popup/heat/ghost curves) + `CountdownSteps`, fully JVM-tested.
+- **20 new unit tests** (FxMath curves, countdown structure, engine row-carrying): **13 suites / 89 tests** total.
+
+### Updated docs | توثيق
+- `docs/DEV_PLAN_V1.3.0.md` documents the full audit (7 findings), item gates and honest non-goals for this release.
+
+### Not in this release | خارج هذا الإصدار (صدق كامل)
+- Dynamic multi-layer music, an "effects intensity" setting, new themes/sound packs — mapped to v1.4.0.
+
+### Changed | تغييرات
+- `versionCode` 4 → 5, `versionName` 1.2.0 → 1.3.0.
+
 ## [1.2.0] — 2026-10-26
 
 ### Changed | تغييرات

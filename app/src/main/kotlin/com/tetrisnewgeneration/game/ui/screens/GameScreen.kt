@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -63,11 +64,19 @@ import com.tetrisnewgeneration.game.modes.Challenges
 import com.tetrisnewgeneration.game.modes.ModeConfig
 import com.tetrisnewgeneration.game.modes.Modes
 import com.tetrisnewgeneration.game.modes.Puzzles
+import com.tetrisnewgeneration.game.themes.EffectPackDef
+import com.tetrisnewgeneration.game.themes.PackDefs
+import com.tetrisnewgeneration.game.themes.ParticleStyle
 import com.tetrisnewgeneration.game.themes.ThemeDef
 import com.tetrisnewgeneration.game.ui.components.BoardCanvas
 import com.tetrisnewgeneration.game.ui.components.MiniPiece
 import com.tetrisnewgeneration.game.ui.components.Particle
+import com.tetrisnewgeneration.game.ui.components.RowFlash
+import com.tetrisnewgeneration.game.ui.components.ScorePopup
+import com.tetrisnewgeneration.game.ui.components.ShockwaveFx
 import com.tetrisnewgeneration.game.ui.components.localizedText
+import com.tetrisnewgeneration.game.ui.fx.CountdownSteps
+import com.tetrisnewgeneration.game.ui.fx.FxMath
 import com.tetrisnewgeneration.game.ui.vm.GameViewModel
 import androidx.compose.runtime.withFrameNanos
 import kotlin.math.cos
@@ -87,6 +96,7 @@ fun GameScreen(
     reducedMotion: Boolean,
     hapticsEnabled: Boolean,
     gestureControls: Boolean,
+    effectPackId: String,
     onHome: () -> Unit
 ) {
     val context = LocalContext.current
@@ -104,6 +114,18 @@ fun GameScreen(
     var bannerVisible by remember { mutableStateOf(false) }
     var bannerColor by remember { mutableStateOf(theme.accent) }
 
+    // v1.3.0 presentation FX state
+    val fxPack = remember(effectPackId) { PackDefs.effectPack(effectPackId) }
+    val rowFlashes = remember { mutableStateListOf<RowFlash>() }
+    val scorePopups = remember { mutableStateListOf<ScorePopup>() }
+    val shockwaves = remember { mutableStateListOf<ShockwaveFx>() }
+    var shakeX by remember { mutableStateOf(0f) }
+    var shakeY by remember { mutableStateOf(0f) }
+    var shakeElapsed by remember { mutableStateOf(Float.MAX_VALUE) }
+    var shakeAmp by remember { mutableStateOf(0f) }
+    var shakeDur by remember { mutableStateOf(0f) }
+    var countdownLabel by remember { mutableStateOf<String?>(null) }
+
     fun haptic() {
         if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
     }
@@ -112,7 +134,8 @@ fun GameScreen(
         if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     }
 
-    // Start or resume the round once.
+    // Start or resume the round once. Fresh rounds play the 3-2-1-GO
+    // countdown (v1.3.0, A3) — resumed sessions start immediately.
     LaunchedEffect(modeKey) {
         vm.prepare()
         val save = resumeSaveJson?.let {
@@ -121,7 +144,22 @@ fun GameScreen(
                 json.decodeFromString(GameSave.serializer(), it)
             } catch (_: Exception) { null }
         }
-        vm.start(config, save)
+        vm.start(config, save, autoStart = save != null)
+        if (save == null) {
+            for (step in CountdownSteps.build()) {
+                val go = step.label == CountdownSteps.GO_LABEL
+                countdownLabel = step.label
+                vm.countdownTick(go)
+                if (go) {
+                    haptic()
+                    vm.beginRound() // the round opens with the GO flash
+                } else {
+                    hapticLight()
+                }
+                delay(step.durationMs)
+            }
+            countdownLabel = null
+        }
     }
 
     // Celebration toasts trigger banner text + flash + particles + haptics.
@@ -153,11 +191,12 @@ fun GameScreen(
         when (kind) {
             GameViewModel.ToastKind.TETRIS -> {
                 haptic(); flashColor = Color(0xFF22D3EE); flashAlpha = 0.45f
-                spawnBurst(particles, density = 40, color = Color(0xFF22D3EE), width = 10f)
+                spawnBurst(particles, (fxPack.density * 1.2f).toInt(), Color(0xFF22D3EE), 10f, fxPack.particle)
+                shockwaves.add(ShockwaveFx())
             }
             GameViewModel.ToastKind.TSPIN -> {
                 haptic(); flashColor = Color(0xFFA855F7); flashAlpha = 0.38f
-                spawnBurst(particles, density = 26, color = Color(0xFFA855F7), width = 10f)
+                spawnBurst(particles, (fxPack.density * 0.9f).toInt(), Color(0xFFA855F7), 10f, fxPack.particle)
             }
             GameViewModel.ToastKind.TSPIN_MINI -> {
                 hapticLight(); flashColor = Color(0xFFC084FC); flashAlpha = 0.28f
@@ -167,18 +206,19 @@ fun GameScreen(
             }
             GameViewModel.ToastKind.PERFECT -> {
                 haptic(); flashColor = Color(0xFFFACC15); flashAlpha = 0.5f
-                spawnBurst(particles, density = 50, color = Color(0xFFFACC15), width = 10f)
+                spawnBurst(particles, (fxPack.density * 1.4f).toInt(), Color(0xFFFACC15), 10f, fxPack.particle)
+                shockwaves.add(ShockwaveFx())
             }
             GameViewModel.ToastKind.LEVEL_UP -> {
                 hapticLight(); flashColor = Color(0xFF4ADE80); flashAlpha = 0.3f
             }
             GameViewModel.ToastKind.COMBO -> {
                 hapticLight()
-                spawnBurst(particles, density = 14, color = Color(0xFF38BDF8), width = 10f)
+                spawnBurst(particles, (fxPack.density * 0.5f).toInt().coerceAtLeast(8), Color(0xFF38BDF8), 10f, fxPack.particle)
             }
             GameViewModel.ToastKind.RECORD -> {
                 haptic(); flashColor = Color(0xFFFCD34D); flashAlpha = 0.5f
-                spawnBurst(particles, density = 60, color = Color(0xFFFCD34D), width = 10f)
+                spawnBurst(particles, (fxPack.density * 1.6f).toInt(), Color(0xFFFCD34D), 10f, fxPack.particle)
             }
         }
         bannerVisible = true
@@ -197,11 +237,12 @@ fun GameScreen(
         bannerVisible = false
     }
 
-    // Particle physics loop.
+    // Particle physics loop + v1.3.0 FX timers (beams, popups, rings, shake).
     LaunchedEffect(Unit) {
         while (true) {
             withFrameNanos { now ->
                 val dt = 1f / 60f
+                val dtMs = dt * 1000f
                 val it = particles.iterator()
                 while (it.hasNext()) {
                     val p = it.next()
@@ -213,8 +254,51 @@ fun GameScreen(
                     if (p.life <= 0f) it.remove()
                 }
                 if (flashAlpha > 0f) flashAlpha = (flashAlpha - dt * 0.9f).coerceAtLeast(0f)
+
+                val flashIt = rowFlashes.iterator()
+                while (flashIt.hasNext()) {
+                    val f = flashIt.next()
+                    f.elapsedMs += dtMs
+                    if (f.elapsedMs >= FxMath.BEAM_DURATION_MS) flashIt.remove()
+                }
+                val popupIt = scorePopups.iterator()
+                while (popupIt.hasNext()) {
+                    val p = popupIt.next()
+                    p.elapsedMs += dtMs
+                    if (p.elapsedMs >= FxMath.POPUP_DURATION_MS) popupIt.remove()
+                }
+                val ringIt = shockwaves.iterator()
+                while (ringIt.hasNext()) {
+                    val r = ringIt.next()
+                    r.elapsedMs += dtMs
+                    if (r.elapsedMs >= FxMath.RING_DURATION_MS) ringIt.remove()
+                }
+                if (shakeElapsed < shakeDur) {
+                    shakeElapsed += dtMs
+                    val off = FxMath.shakeOffset(shakeElapsed, shakeDur, shakeAmp)
+                    shakeX = off
+                    shakeY = off * 0.45f
+                } else if (shakeX != 0f || shakeY != 0f) {
+                    shakeX = 0f
+                    shakeY = 0f
+                }
             }
         }
+    }
+
+    // Cleared-row beams + score popup on every line clear (C2/C3).
+    LaunchedEffect(ui.clearSeq) {
+        if (ui.clearSeq == 0) return@LaunchedEffect
+        for (row in ui.clearedRows) rowFlashes.add(RowFlash(row))
+        if (ui.clearPoints > 0) scorePopups.add(ScorePopup(ui.clearPoints))
+    }
+
+    // Screen shake requests (C4). Reduced motion never shakes.
+    LaunchedEffect(ui.shakeSeq) {
+        if (ui.shakeSeq == 0 || reducedMotion) return@LaunchedEffect
+        shakeAmp = ui.shakeAmpPx
+        shakeDur = ui.shakeDurationMs.toFloat()
+        shakeElapsed = 0f
     }
 
     // Pause on app background; save session.
@@ -309,7 +393,13 @@ fun GameScreen(
 
                 // The board shares the weighted middle slot; full-screen
                 // gestures are handled by the layer at the bottom of the root box.
-                Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                // graphicsLayer applies the v1.3.0 screen shake (C4).
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxHeight().graphicsLayer {
+                        translationX = shakeX
+                        translationY = shakeY
+                    }
+                ) {
                     BoardCanvas(
                         theme = theme,
                         boardGrid = ui.board,
@@ -319,6 +409,10 @@ fun GameScreen(
                         flashAlpha = flashAlpha,
                         flashColor = flashColor,
                         reducedMotion = reducedMotion,
+                        rowFlashes = rowFlashes,
+                        scorePopups = scorePopups,
+                        shockwaves = shockwaves,
+                        comboHeat = FxMath.comboHeat(ui.combo),
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
@@ -376,6 +470,17 @@ fun GameScreen(
                     pulse = rememberBannerPulse(reducedMotion)
                 )
             }
+        }
+
+        // Countdown overlay (v1.3.0, C8) — pure display, never blocks input.
+        countdownLabel?.let { label ->
+            CountdownOverlay(
+                label = if (label == CountdownSteps.GO_LABEL) {
+                    context.getString(R.string.countdown_go)
+                } else label,
+                accent = theme.accent,
+                reducedMotion = reducedMotion
+            )
         }
 
         // Pause overlay
@@ -445,7 +550,8 @@ internal fun spawnBurst(
     particles: MutableList<Particle>,
     density: Int,
     color: Color,
-    width: Float
+    width: Float,
+    style: ParticleStyle = ParticleStyle.BURST
 ) {
     val rng = Random(System.nanoTime())
     repeat(density) {
@@ -461,7 +567,10 @@ internal fun spawnBurst(
                 decay = 1.1f + rng.nextFloat() * 0.8f,
                 size = 3f + rng.nextFloat() * 4f,
                 color = color,
-                spin = 0f
+                spin = if (style == ParticleStyle.SHATTER || style == ParticleStyle.CONFETTI) {
+                    (rng.nextFloat() - 0.5f) * 720f
+                } else 0f,
+                style = style
             )
         )
     }

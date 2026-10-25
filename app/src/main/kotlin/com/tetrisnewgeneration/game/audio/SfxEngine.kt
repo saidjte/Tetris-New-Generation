@@ -13,7 +13,8 @@ class SfxEngine(private val context: Context) {
 
     enum class Sound {
         MOVE, ROTATE, DROP, LOCK, CLEAR, COMBO, LEVEL_UP,
-        ACHIEVE, REWARD, UNLOCK, ROUND_OVER, WIN, CLICK
+        ACHIEVE, REWARD, UNLOCK, ROUND_OVER, WIN, CLICK,
+        COUNTDOWN, GO
     }
 
     private val pool: SoundPool = SoundPool.Builder()

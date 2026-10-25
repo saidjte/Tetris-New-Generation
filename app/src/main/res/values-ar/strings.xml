@@ -42,6 +42,7 @@
     <string name="hud_goal">الهدف</string>
     <string name="hud_combo">سلسلة ×%1$d</string>
     <string name="hud_tetris">تصفية رباعية!</string>
+    <string name="countdown_go">انطلق!</string>
     <string name="hud_tspin">تاي سبين!</string>
     <string name="hud_back_to_back">تتالية!</string>
     <string name="hud_perfect">تصفية مثالية!</string>

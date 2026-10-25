@@ -8,13 +8,19 @@ sealed class GameEvent {
     data class HardDropped(val rows: Int) : GameEvent()
     data object PieceLocked : GameEvent()
     data class PieceHeld(val swapped: Boolean) : GameEvent()
+    /**
+     * [clearedRows] holds the pre-collapse board indices of the removed rows
+     * (top-to-bottom order) so the renderer can flash them. Defaults to an
+     * empty list for source compatibility with existing call sites/tests.
+     */
     data class LinesCleared(
         val lines: Int,
         val tspinKind: TSpinKind,
         val backToBack: Boolean,
         val combo: Int,
         val perfectClear: Boolean,
-        val points: Long
+        val points: Long,
+        val clearedRows: List<Int> = emptyList()
     ) : GameEvent()
 
     data class LevelUp(val newLevel: Int) : GameEvent()

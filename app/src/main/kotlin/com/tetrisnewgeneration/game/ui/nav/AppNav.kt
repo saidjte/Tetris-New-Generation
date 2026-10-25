@@ -135,6 +135,7 @@ fun AppNav(settings: PlayerSettings) {
                 reducedMotion = settings.reducedMotion,
                 hapticsEnabled = settings.hapticsEnabled,
                 gestureControls = settings.gestureControls,
+                effectPackId = settings.effectPackId,
                 onHome = {
                     SessionHolder.json = null
                     nav.popBackStack(Routes.HOME, inclusive = false)

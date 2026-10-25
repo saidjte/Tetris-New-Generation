@@ -343,7 +343,8 @@ class GameEngine(
                     backToBack = b2bUsed,
                     combo = combo,
                     perfectClear = perfect,
-                    points = points
+                    points = points,
+                    clearedRows = clearedRows
                 )
             )
         }

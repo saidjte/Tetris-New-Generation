@@ -1,5 +1,7 @@
 package com.tetrisnewgeneration.game.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -272,7 +274,9 @@ fun BoardGestureLayer(
     )
 }
 
-/** Gentle infinite pulse that keeps the event banner alive on screen. */
+/**
+ * Gentle infinite pulse that keeps the event banner alive on screen.
+ */
 @Composable
 internal fun rememberBannerPulse(reducedMotion: Boolean): Float {
     if (reducedMotion) return 1f
@@ -286,6 +290,40 @@ internal fun rememberBannerPulse(reducedMotion: Boolean): Float {
         ),
         label = "bannerScale"
     ).value
+}
+
+/**
+ * Round-start countdown overlay (v1.3.0, C8). Each number shrinks inward,
+ * the GO flash lands as the round opens. Pure display: no pointer handlers,
+ * so touches pass straight through to the game underneath.
+ */
+@Composable
+fun CountdownOverlay(label: String, accent: Color, reducedMotion: Boolean) {
+    val scale = remember(label) { Animatable(if (reducedMotion) 1f else 1.45f) }
+    LaunchedEffect(label) {
+        if (!reducedMotion) {
+            scale.snapTo(1.45f)
+            scale.animateTo(
+                0.85f,
+                tween(durationMillis = 420, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+            label,
+            color = accent,
+            fontWeight = FontWeight.Black,
+            fontSize = 64.sp,
+            letterSpacing = 2.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .scale(scale.value)
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color(0x66050713))
+                .padding(horizontal = 30.dp, vertical = 10.dp)
+        )
+    }
 }
 
 /**
