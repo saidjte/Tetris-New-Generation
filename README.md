@@ -18,7 +18,7 @@
 
 Grab the latest installable APK from **[GitHub Releases](../../releases)**:
 
-1. Open the [Releases page](../../releases) and download `TetrisNewGeneration-v1.0.0.apk` (or the latest).
+1. Open the [Releases page](../../releases) and download the APK from the **latest release** (currently v1.0.1).
 2. On your Android phone, open the file and allow *Install unknown apps* for your browser/file manager if asked.
 3. Install and play — no account, no internet, no ads.
 
@@ -116,12 +116,19 @@ Release signing: define `TNG_KEYSTORE`, `TNG_KEYSTORE_PASSWORD`, `TNG_KEY_ALIAS`
 3. Builds the debug APK and uploads it as a workflow artifact.
 4. On a `v*` tag: builds the release APK, generates an ephemeral keystore when no signing secrets exist, and **publishes a GitHub Release with the APK attached**.
 
-To publish a new version: `git tag v1.0.1 && git push origin v1.0.1`.
+To publish a new version — **version-bump policy (mandatory)**: every fix or upgrade MUST change the version number.
+
+1. Bump `versionCode` (+1, always) and `versionName` in `app/build.gradle.kts`.
+2. Add an entry to [CHANGELOG.md](CHANGELOG.md).
+3. `git tag vX.Y.Z && git push origin vX.Y.Z` → CI runs tests, builds, and publishes the release with the APK.
+
+A tag that does not match `versionName` fails the build (CI guard). Docs-only changes do not create a release.
 
 ## 📚 Project documentation / وثائق المشروع
 
 | Doc / الوثيقة | Purpose / الغرض |
 |---|---|
+| [CHANGELOG.md](CHANGELOG.md) | Version history + mandatory version-bump policy / سجل التغييرات وسياسة الإصدار الإلزامية |
 | [docs/PLAN.md](docs/PLAN.md) | Detailed completion plan with honesty charter & audit baseline / خطة الإتمام وميثاق الأمانة |
 | [docs/AUDIT.md](docs/AUDIT.md) | Evidence-frozen audit log incl. clean-env re-verification & APK inspection / سجل التدقيق بالأدلة |
 | [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md) | Final report: 12 acceptance criteria × evidence + install guide / التقرير النهائي ومصفوفة القبول |
