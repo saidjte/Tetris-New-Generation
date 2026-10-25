@@ -78,6 +78,63 @@ object AdventureLevels {
             "امسح 25 صفاً بدءًا من المستوى 10", "Clear 25 lines starting at level 10",
             "monochrome", 150, 400,
             ModeConfig(id = "adv_10", goalLines = 25, startLevel = 10, linesPerLevel = 0)
+        ),
+        AdventureLevel(
+            11, "أطلال القمامة", "Ruins of Garbage",
+            "نظّف الأنقاض ثم امسح 10 صفوف", "Clean the ruins, then clear 10 lines",
+            "aurora", 110, 300,
+            ModeConfig(
+                id = "adv_11",
+                goalLines = 10, startLevel = 3, linesPerLevel = 0,
+                initialBoard = listOf(
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "..........",
+                    "SZJLTTZJLS",
+                    "JLSZTZLSZJ",
+                    "TZJLSSZJLT",
+                    "LZTJJSZLZS"
+                )
+            )
+        ),
+        AdventureLevel(
+            12, "عاصفة الثواني", "Storm of Seconds",
+            "اجمع 5000 نقطة قبل انتهاء دقيقة واحدة", "Score 5,000 before one minute ends",
+            "crystal", 120, 330,
+            ModeConfig(id = "adv_12", goalScore = 5000, timeLimitMs = 60_000L, startLevel = 5, linesPerLevel = 0)
+        ),
+        AdventureLevel(
+            13, "بقاء العمالقة", "Survival of Giants",
+            "انجُ من التصعيد وامسح 20 صفاً", "Survive the ramp and clear 20 lines",
+            "lava", 130, 360,
+            ModeConfig(id = "adv_13", goalLines = 20, survivalRampMs = 18_000L, startLevel = 4, linesPerLevel = 0)
+        ),
+        AdventureLevel(
+            14, "قلعة الكومبو", "Combo Castle",
+            "ابنِ سلسلة كومبو من 4", "Build a 4-combo chain",
+            "galaxy", 140, 390,
+            ModeConfig(id = "adv_14", goalCombo = 4, startLevel = 3, linesPerLevel = 0)
+        ),
+        AdventureLevel(
+            15, "الخاتمة الذهبية", "Golden Finale",
+            "اجمع 20000 نقطة من المستوى 8", "Score 20,000 starting at level 8",
+            "golden", 200, 550,
+            ModeConfig(id = "adv_15", goalScore = 20_000, startLevel = 8, linesPerLevel = 10)
         )
     )
 

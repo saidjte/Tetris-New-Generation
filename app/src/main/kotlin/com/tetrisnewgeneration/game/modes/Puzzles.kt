@@ -175,6 +175,84 @@ object Puzzles {
             ),
             pieces = listOf(PieceType.T, PieceType.L, PieceType.I),
             goalLines = 3
+        ),
+        // Puzzles 9-12 (v1.1.0): designs verified by hand — every gap forms an
+        // unobstructed vertical descent corridor for its fixed piece.
+        PuzzleDef(
+            id = 9,
+            titleAr = "الإبرة الرأسية",
+            titleEn = "Vertical Needle",
+            boardRows = listOf(
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                ".ZJSLLJTZI",
+                ".ZJSLLJTZI",
+                ".ZJSLLJTZI",
+                ".ZJSLLJTZI"
+            ),
+            pieces = listOf(PieceType.I),
+            goalLines = 4
+        ),
+        PuzzleDef(
+            id = 10,
+            titleAr = "عمود اليمين",
+            titleEn = "Right Column",
+            boardRows = listOf(
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "SJSLZT.IJL",
+                "SJSLZ..IJL",
+                "SJSLZT.IJI"
+            ),
+            pieces = listOf(PieceType.T),
+            goalLines = 3
+        ),
+        PuzzleDef(
+            id = 11,
+            titleAr = "عمود اليسار",
+            titleEn = "Left Column",
+            boardRows = listOf(
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "SJS..TZJIL",
+                "SJSL.TZJIL",
+                "ZJSL.TZJII"
+            ),
+            pieces = listOf(PieceType.L),
+            goalLines = 3
+        ),
+        PuzzleDef(
+            id = 12,
+            titleAr = "المهندس",
+            titleEn = "The Engineer",
+            boardRows = listOf(
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "SJSLZ....Z",
+                "SJ..SLZTIZ",
+                "SJ..SLZTIZ"
+            ),
+            pieces = listOf(PieceType.O, PieceType.I),
+            goalLines = 3
         )
     )
 }

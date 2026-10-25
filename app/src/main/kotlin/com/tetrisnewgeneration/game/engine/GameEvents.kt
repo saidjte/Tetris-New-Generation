@@ -10,7 +10,7 @@ sealed class GameEvent {
     data class PieceHeld(val swapped: Boolean) : GameEvent()
     data class LinesCleared(
         val lines: Int,
-        val tspin: Boolean,
+        val tspinKind: TSpinKind,
         val backToBack: Boolean,
         val combo: Int,
         val perfectClear: Boolean,

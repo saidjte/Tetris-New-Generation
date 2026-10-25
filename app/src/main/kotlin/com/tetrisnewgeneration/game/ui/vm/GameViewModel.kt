@@ -12,6 +12,7 @@ import com.tetrisnewgeneration.game.engine.GameAction
 import com.tetrisnewgeneration.game.engine.GameEngine
 import com.tetrisnewgeneration.game.engine.GameEvent
 import com.tetrisnewgeneration.game.engine.GameSave
+import com.tetrisnewgeneration.game.engine.TSpinKind
 import com.tetrisnewgeneration.game.modes.ModeConfig
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -67,7 +68,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         val toastKind: ToastKind? = null
     )
 
-    enum class ToastKind { TETRIS, TSPIN, B2B, PERFECT, LEVEL_UP, RECORD, COMBO }
+    enum class ToastKind { TETRIS, TSPIN, TSPIN_MINI, B2B, PERFECT, LEVEL_UP, RECORD, COMBO }
 
     private val _ui = MutableStateFlow(UiState())
     val ui: StateFlow<UiState> = _ui
@@ -207,15 +208,19 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                     if (event.lines >= 4) {
                         sfx.play(SfxEngine.Sound.CLEAR)
                         pushToast(ToastKind.TETRIS)
-                    } else if (event.tspin) {
+                    } else if (event.tspinKind == TSpinKind.FULL) {
                         sfx.play(SfxEngine.Sound.CLEAR)
                         pushToast(ToastKind.TSPIN)
+                    } else if (event.tspinKind == TSpinKind.MINI) {
+                        sfx.play(SfxEngine.Sound.CLEAR)
+                        pushToast(ToastKind.TSPIN_MINI)
                     } else if (event.combo >= 2) {
                         sfx.play(SfxEngine.Sound.COMBO)
                         pushToast(ToastKind.COMBO)
                     } else if (event.lines > 0) {
                         sfx.play(SfxEngine.Sound.CLEAR)
                     }
+                    if (event.backToBack && event.lines > 0) pushToast(ToastKind.B2B)
                     if (event.perfectClear) pushToast(ToastKind.PERFECT)
                     if (event.lines >= 4) bumpStat(StatKeys.TETRISES, 1)
                     if (event.lines > 0) {

@@ -36,6 +36,7 @@ object Routes {
     const val TASKS = "tasks"
     const val STATS = "stats"
     const val SETTINGS = "settings"
+    const val HOWTO = "howto"
 
     fun game(modeKey: String) = "game/$modeKey"
 }
@@ -57,6 +58,13 @@ fun AppNav(settings: PlayerSettings) {
 
         composable(Routes.HOME) {
             val storeVm: StoreViewModel = viewModel()
+            // First-launch tutorial: shown exactly once, then never again.
+            LaunchedEffect(Unit) {
+                if (!container.settings.current().tutorialShown) {
+                    container.settings.setTutorialShown(true)
+                    nav.navigate(Routes.HOWTO)
+                }
+            }
             HomeScreen(
                 settings = settings,
                 theme = com.tetrisnewgeneration.game.themes.ThemeDefs.byId(settings.themeId),
@@ -79,6 +87,7 @@ fun AppNav(settings: PlayerSettings) {
                     }
                 },
                 onModes = { nav.navigate(Routes.MODES) },
+                onHowTo = { nav.navigate(Routes.HOWTO) },
                 onStore = { nav.navigate(Routes.STORE) },
                 onTasks = { nav.navigate(Routes.TASKS) },
                 onStats = { nav.navigate(Routes.STATS) },
@@ -125,6 +134,7 @@ fun AppNav(settings: PlayerSettings) {
                 theme = com.tetrisnewgeneration.game.themes.ThemeDefs.byId(settings.themeId),
                 reducedMotion = settings.reducedMotion,
                 hapticsEnabled = settings.hapticsEnabled,
+                gestureControls = settings.gestureControls,
                 onHome = {
                     SessionHolder.json = null
                     nav.popBackStack(Routes.HOME, inclusive = false)
@@ -190,6 +200,13 @@ fun AppNav(settings: PlayerSettings) {
                         container.settings.clearSession()
                     }
                 },
+                onBack = { nav.popBackStack() }
+            )
+        }
+
+        composable(Routes.HOWTO) {
+            com.tetrisnewgeneration.game.ui.screens.HowToPlayScreen(
+                theme = com.tetrisnewgeneration.game.themes.ThemeDefs.byId(settings.themeId),
                 onBack = { nav.popBackStack() }
             )
         }

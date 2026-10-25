@@ -107,6 +107,10 @@ fun SettingsScreen(
                 settings.hapticsEnabled, theme
             ) { onChange { copy(hapticsEnabled = it) } }
             ToggleRow(
+                stringResource(R.string.settings_gestures),
+                settings.gestureControls, theme
+            ) { onChange { copy(gestureControls = it) } }
+            ToggleRow(
                 stringResource(R.string.settings_reduced_motion),
                 settings.reducedMotion, theme
             ) { onChange { copy(reducedMotion = it) } }

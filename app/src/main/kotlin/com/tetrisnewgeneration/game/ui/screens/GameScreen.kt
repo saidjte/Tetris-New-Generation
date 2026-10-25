@@ -4,6 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -46,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.runtime.collectAsState
 import com.tetrisnewgeneration.game.R
+import kotlinx.coroutines.delay
 import com.tetrisnewgeneration.game.audio.SfxEngine
 import com.tetrisnewgeneration.game.engine.GameAction
 import com.tetrisnewgeneration.game.engine.GameSave
@@ -77,6 +81,7 @@ fun GameScreen(
     theme: ThemeDef,
     reducedMotion: Boolean,
     hapticsEnabled: Boolean,
+    gestureControls: Boolean,
     onHome: () -> Unit
 ) {
     val context = LocalContext.current
@@ -90,6 +95,7 @@ fun GameScreen(
     val particles = remember { mutableStateListOf<Particle>() }
     var flashAlpha by remember { mutableStateOf(0f) }
     var flashColor by remember { mutableStateOf(Color.White) }
+    var bannerText by remember { mutableStateOf<String?>(null) }
 
     fun haptic() {
         if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -107,10 +113,20 @@ fun GameScreen(
         vm.start(config, save)
     }
 
-    // Celebration toasts trigger flash + particles + haptics.
+    // Celebration toasts trigger banner text + flash + particles + haptics.
     LaunchedEffect(ui.toastSeq) {
         if (ui.toastSeq == 0) return@LaunchedEffect
         val kind = ui.toastKind ?: return@LaunchedEffect
+        bannerText = when (kind) {
+            GameViewModel.ToastKind.TETRIS -> context.getString(R.string.hud_tetris)
+            GameViewModel.ToastKind.TSPIN -> context.getString(R.string.hud_tspin)
+            GameViewModel.ToastKind.TSPIN_MINI -> context.getString(R.string.hud_tspin_mini)
+            GameViewModel.ToastKind.B2B -> context.getString(R.string.hud_back_to_back)
+            GameViewModel.ToastKind.PERFECT -> context.getString(R.string.hud_perfect)
+            GameViewModel.ToastKind.LEVEL_UP -> context.getString(R.string.hud_level_up, ui.level)
+            GameViewModel.ToastKind.RECORD -> context.getString(R.string.hud_new_record)
+            GameViewModel.ToastKind.COMBO -> context.getString(R.string.hud_combo, ui.combo)
+        }
         when (kind) {
             GameViewModel.ToastKind.TETRIS -> {
                 haptic(); flashColor = theme.accent; flashAlpha = 0.35f
@@ -138,6 +154,8 @@ fun GameScreen(
                 flashColor = theme.accent; flashAlpha = 0.2f
             }
         }
+        delay(1200)
+        bannerText = null
     }
 
     // Particle physics loop.
@@ -238,20 +256,28 @@ fun GameScreen(
                     }
                 }
 
-                BoardCanvas(
-                    theme = theme,
-                    boardGrid = ui.board,
-                    activeCells = ui.activeCells,
-                    ghostCells = ui.ghostCells,
-                    particles = particles,
-                    flashAlpha = flashAlpha,
-                    flashColor = flashColor,
-                    reducedMotion = reducedMotion,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(10.dp))
-                )
+                // Board + optional gesture overlay share the weighted middle slot.
+                Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                    BoardCanvas(
+                        theme = theme,
+                        boardGrid = ui.board,
+                        activeCells = ui.activeCells,
+                        ghostCells = ui.ghostCells,
+                        particles = particles,
+                        flashAlpha = flashAlpha,
+                        flashColor = flashColor,
+                        reducedMotion = reducedMotion,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(10.dp))
+                    )
+
+                    // Optional board gestures (tap = rotate, drag = move/soft-drop).
+                    // The button pad always remains available as the primary control.
+                    if (gestureControls && !ui.paused && !ui.finished) {
+                        BoardGestureLayer(onAction = { vm.onAction(it) })
+                    }
+                }
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -275,6 +301,24 @@ fun GameScreen(
             )
         }
 
+        // Transient event banner (T-SPIN / B2B / TETRIS ...)
+        bannerText?.let { txt ->
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                Text(
+                    txt,
+                    color = theme.textPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    modifier = Modifier
+                        .padding(top = 88.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(theme.surface.copy(alpha = 0.92f))
+                        .border(1.dp, theme.accent.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
+
         // Pause overlay
         if (ui.paused && !ui.finished) {
             PauseOverlay(
@@ -293,7 +337,23 @@ fun GameScreen(
                 modeKey = modeKey,
                 onRetry = { vm.restart() },
                 onNextStage = { vm.quitToHome(); onHome() },
-                onHome = { vm.quitToHome(); onHome() }
+                onHome = { vm.quitToHome(); onHome() },
+                onShare = {
+                    val text = context.getString(
+                        R.string.share_text_fmt,
+                        formatNumber(ui.score), ui.lines, ui.level
+                    )
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(android.content.Intent.EXTRA_TEXT, text)
+                    }
+                    context.startActivity(
+                        android.content.Intent.createChooser(
+                            send,
+                            context.getString(R.string.summary_share)
+                        )
+                    )
+                }
             )
         }
     }

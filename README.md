@@ -18,7 +18,7 @@
 
 Grab the latest installable APK from **[GitHub Releases](../../releases)**:
 
-1. Open the [Releases page](../../releases) and download the APK from the **latest release** (currently v1.0.1).
+1. Open the [Releases page](../../releases) and download the APK from the **latest release** (currently v1.1.0).
 2. On your Android phone, open the file and allow *Install unknown apps* for your browser/file manager if asked.
 3. Install and play — no account, no internet, no ads.
 
@@ -40,16 +40,18 @@ You can also build it yourself (see below) or download the APK artifact from any
   - **Time Attack / سباق الوقت** — 1, 3 or 5 minute score sprints.
   - **Survival / البقاء** — gravity ramps up every 20 seconds.
   - **Speed Mode / السرعة القصوى** — start at level 8 / 12 / 18.
-  - **Puzzle Mode / الألغاز** — 8 handcrafted stages with fixed piece sets and move limits.
+  - **Puzzle Mode / الألغاز** — 12 handcrafted stages with fixed piece sets and move limits (each verified to have an unobstructed solving corridor).
   - **Zen / الاسترخاء** — calm gravity, no pressure.
-  - **Adventure / المغامرة** — 10 sequential stages with goals, rewards and unlock progression.
+  - **Adventure / المغامرة** — 15 sequential stages with goals, rewards and unlock progression (incl. garbage-clear, timed score storm, survival ramp and combo castle).
   - **Practice / الممارسة** — relaxed speed for training.
-- **Guideline-style engine** in pure Kotlin: SRS rotation with wall kicks, 7-bag randomizer, hold, ghost piece, 5-piece preview, lock delay with reset cap, T-spin detection, back-to-back, combos, perfect clears, guideline speed curve and scoring.
+- **Guideline-style engine** in pure Kotlin: SRS rotation with wall kicks, 7-bag randomizer, hold, ghost piece, 5-piece preview, lock delay with reset cap, T-spin detection with **full vs mini distinction**, back-to-back, combos, perfect clears, guideline speed curve and scoring.
+- **Visible event banners** for Tetris / T-Spin / Mini T-Spin / Back-to-Back / Perfect Clear / Combo / Level-up (AR/EN).
 - **Local store** — 13 visual themes (Neon Cyber, Galaxy, Aurora, Minimal, Retro Arcade, Crystal, Lava, Ocean, Monochrome, Golden, Nature, Pixel Art + default), 5 block packs, 5 effect packs and 4 sound packs. Bought with locally earned coins; atomic purchase logic can never double-charge. Catalog lives in `assets/store.json` (prices editable without code changes).
 - **Progression** — XP/levels, coins, 16 permanent achievements, 3 rotating daily tasks, per-mode best scores, lifetime statistics and a post-round summary with rewards.
 - **Audio** — 4 procedurally generated SFX packs + 3 original music loops (menu / play / zen), separate volume controls, auto-pause on background. All files are local WAVs created by `scripts/gen_audio.py` (no licensing risk, no downloads).
 - **Bilingual UI** — full Arabic + English with automatic **RTL/LTR** switching, per-app language setting.
-- **Comfort options** — dark themes, reduced-motion mode, haptics toggle, per-channel volumes.
+- **Comfort options** — dark themes, reduced-motion mode, haptics toggle, per-channel volumes, **optional board gestures** (tap = rotate, drag = move/soft-drop) alongside the always-available button pad.
+- **First-run help + result sharing** — a bilingual "How to play" screen (shown once, always in the menu) and one-tap sharing of round results.
 - **Offline-first by design** — the manifest requests **no INTERNET permission at all**; nothing can or does go online.
 
 ## 🧱 Tech stack / التقنيات
@@ -136,7 +138,7 @@ A tag that does not match `versionName` fails the build (CI guard). Docs-only ch
 
 ## 🧪 Tests / الاختبارات
 
-47 JVM unit tests cover: piece shapes & rotations (SRS + O-piece stability + wall kicks), collision & bounds, line clearing, scoring values (level multiplier, back-to-back, combos, perfect clear), gravity curve, hold semantics, hard/soft drop scoring, ghost piece, top-out/game-over, time-limit win, goal completion, puzzle configs, pause/resume, save/restore round-trip (serialization), store purchases (single debit, duplicate rejection, insufficient funds, free grants) and XP progression.
+57 JVM unit tests cover: piece shapes & rotations (SRS + O-piece stability + wall kicks), collision & bounds, line clearing, scoring values (level multiplier, back-to-back, combos, perfect clear), **mini vs full T-spin classification and scoring**, gravity curve, hold semantics, hard/soft drop scoring, ghost piece, top-out/game-over, time-limit win, goal completion, puzzle configs, pause/resume, save/restore round-trip (serialization), store purchases (single debit, duplicate rejection, insufficient funds, free grants), XP progression and **catalog structural validation** (puzzles/adventure).
 
 ```bash
 ./gradlew :app:testDebugUnitTest     # reports in app/build/reports/tests/
@@ -152,8 +154,8 @@ A tag that does not match `versionName` fails the build (CI guard). Docs-only ch
 
 - Screenshots will be added to this README as they become available.
 - Portrait orientation only in v1 (responsive within portrait sizes).
-- T-spins are detected as full T-spins (no mini T-spin distinction).
-- Adventure/Puzzle stages ship with the 10 + 8 built-in levels listed above.
+- T-spins are classified as full or mini by the front-corner rule; the rare "TST kick upgrade" (mini promoted to full by the 5th kick index) is not implemented (documented limitation).
+- Adventure/Puzzle stages ship with the 15 + 12 built-in levels listed above.
 - Sound packs share the same synthesis pipeline with different voicing (sine / square / FM / triangle).
 - Release APKs built without signing secrets are debug-signed (installable, documented).
 

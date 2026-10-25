@@ -308,7 +308,7 @@ class GameEngine(
 
     private fun lockPiece() {
         val p = piece ?: return
-        val tspin = detectTSpin(p)
+        val tspinKind = detectTSpinKind(p)
         board.lock(p)
         piecesPlaced++
         emit(GameEvent.PieceLocked)
@@ -322,20 +322,24 @@ class GameEngine(
         combo = if (cleared > 0) combo + 1 else -1
         if (combo > maxCombo) maxCombo = combo
 
+        val tspin = tspinKind != TSpinKind.NONE
         val b2bEligible = cleared >= 4 || (tspin && cleared > 0)
         val b2bUsed = b2bEligible && backToBack
         if (b2bEligible) backToBack = true
         else if (cleared > 0) backToBack = false
 
         val perfect = cleared > 0 && boardIsEmpty()
-        val points = Scoring.pointsForLock(cleared, level, tspin, b2bUsed, combo, perfect)
+        val points = Scoring.pointsForLock(
+            cleared, level, tspin, b2bUsed, combo, perfect,
+            mini = tspinKind == TSpinKind.MINI
+        )
         score += points
 
         if (cleared > 0 || tspin) {
             emit(
                 GameEvent.LinesCleared(
                     lines = cleared,
-                    tspin = tspin,
+                    tspinKind = tspinKind,
                     backToBack = b2bUsed,
                     combo = combo,
                     perfectClear = perfect,
@@ -372,17 +376,9 @@ class GameEngine(
         return true
     }
 
-    private fun detectTSpin(p: Piece): Boolean {
-        if (p.type != PieceType.T || !lastActionWasRotation) return false
-        // T center is the middle of the 3x3 box.
-        val cx = p.x + 1
-        val cy = p.y + 1
-        val corners = listOf(
-            Point(cx - 1, cy - 1), Point(cx + 1, cy - 1),
-            Point(cx - 1, cy + 1), Point(cx + 1, cy + 1)
-        )
-        val filled = corners.count { !board.isInside(it) || board.cell(it.x, it.y) != null }
-        return filled >= 3
+    private fun detectTSpinKind(p: Piece): TSpinKind {
+        if (p.type != PieceType.T || !lastActionWasRotation) return TSpinKind.NONE
+        return TSpinRules.classify(board, p)
     }
 
     private fun setLevel(newLevel: Int) {

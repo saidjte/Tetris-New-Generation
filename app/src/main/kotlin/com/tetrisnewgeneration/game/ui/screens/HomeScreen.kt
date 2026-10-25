@@ -53,6 +53,7 @@ fun HomeScreen(
     onPlay: () -> Unit,
     onContinue: () -> Unit,
     onModes: () -> Unit,
+    onHowTo: () -> Unit,
     onStore: () -> Unit,
     onTasks: () -> Unit,
     onStats: () -> Unit,
@@ -159,6 +160,8 @@ fun HomeScreen(
             Spacer(Modifier.height(18.dp))
 
             MenuButtonRow(stringResource(R.string.btn_modes), theme, onClick = onModes)
+            Spacer(Modifier.height(10.dp))
+            MenuButtonRow(stringResource(R.string.btn_howto), theme, onClick = onHowTo)
             Spacer(Modifier.height(10.dp))
             MenuButtonRow(stringResource(R.string.btn_store), theme, onClick = onStore)
             Spacer(Modifier.height(10.dp))

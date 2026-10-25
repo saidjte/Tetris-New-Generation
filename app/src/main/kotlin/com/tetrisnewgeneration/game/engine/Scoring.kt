@@ -10,7 +10,10 @@ object Scoring {
     const val HARD_DROP_POINTS_PER_CELL = 2L
 
     /** Base points (before level multiplier) for a simultaneous line clear. */
-    fun lineClearBase(lines: Int, tspin: Boolean): Long = when {
+    fun lineClearBase(lines: Int, tspin: Boolean, mini: Boolean = false): Long = when {
+        tspin && mini && lines == 0 -> 100L
+        tspin && mini && lines == 1 -> 200L
+        tspin && mini && lines >= 2 -> 400L
         tspin && lines == 0 -> 400L
         tspin && lines == 1 -> 800L
         tspin && lines == 2 -> 1200L
@@ -32,9 +35,10 @@ object Scoring {
         tspin: Boolean,
         backToBack: Boolean,
         combo: Int,
-        perfectClear: Boolean
+        perfectClear: Boolean,
+        mini: Boolean = false
     ): Long {
-        var points = lineClearBase(lines, tspin) * level
+        var points = lineClearBase(lines, tspin, mini) * level
         val b2bEligible = lines > 0 && (lines >= 4 || tspin)
         if (b2bEligible && backToBack) points = (points * 3) / 2
         if (combo > 0) points += 50L * combo * level

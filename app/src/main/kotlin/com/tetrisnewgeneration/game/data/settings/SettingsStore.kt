@@ -29,6 +29,8 @@ data class PlayerSettings(
     val blockPackId: String = "blocks_standard",
     val effectPackId: String = "fx_sparks",
     val soundPackId: String = "sfx_original",
+    val gestureControls: Boolean = false,   // optional board gestures; buttons always remain available
+    val tutorialShown: Boolean = false,
     val coins: Long = 150L,            // starter balance
     val xp: Long = 0L,
     val playerLevel: Int = 1
@@ -59,6 +61,8 @@ class SettingsStore(private val context: Context) : WalletStore {
         val BLOCK_PACK = stringPreferencesKey("block_pack_id")
         val EFFECT_PACK = stringPreferencesKey("effect_pack_id")
         val SOUND_PACK = stringPreferencesKey("sound_pack_id")
+        val GESTURE_CONTROLS = booleanPreferencesKey("gesture_controls")
+        val TUTORIAL_SHOWN = booleanPreferencesKey("tutorial_shown")
         val COINS = longPreferencesKey("coins")
         val XP = longPreferencesKey("xp")
         val PLAYER_LEVEL = intPreferencesKey("player_level")
@@ -78,6 +82,8 @@ class SettingsStore(private val context: Context) : WalletStore {
             blockPackId = p[Keys.BLOCK_PACK] ?: "blocks_standard",
             effectPackId = p[Keys.EFFECT_PACK] ?: "fx_sparks",
             soundPackId = p[Keys.SOUND_PACK] ?: "sfx_original",
+            gestureControls = p[Keys.GESTURE_CONTROLS] ?: false,
+            tutorialShown = p[Keys.TUTORIAL_SHOWN] ?: false,
             coins = p[Keys.COINS] ?: 150L,
             xp = p[Keys.XP] ?: 0L,
             playerLevel = p[Keys.PLAYER_LEVEL] ?: 1
@@ -97,6 +103,8 @@ class SettingsStore(private val context: Context) : WalletStore {
     suspend fun setBlockPackId(value: String) = edit { it[Keys.BLOCK_PACK] = value }
     suspend fun setEffectPackId(value: String) = edit { it[Keys.EFFECT_PACK] = value }
     suspend fun setSoundPackId(value: String) = edit { it[Keys.SOUND_PACK] = value }
+    suspend fun setGestureControls(value: Boolean) = edit { it[Keys.GESTURE_CONTROLS] = value }
+    suspend fun setTutorialShown(value: Boolean) = edit { it[Keys.TUTORIAL_SHOWN] = value }
 
     override suspend fun setWallet(coins: Long, xp: Long, playerLevel: Int) = edit {
         it[Keys.COINS] = coins
@@ -123,6 +131,7 @@ class SettingsStore(private val context: Context) : WalletStore {
         it[Keys.BLOCK_PACK] = s.blockPackId
         it[Keys.EFFECT_PACK] = s.effectPackId
         it[Keys.SOUND_PACK] = s.soundPackId
+        it[Keys.GESTURE_CONTROLS] = s.gestureControls
     }
 
     private suspend fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {

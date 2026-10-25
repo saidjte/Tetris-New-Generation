@@ -136,6 +136,12 @@
     <string name="on">On</string>
     <string name="off">Off</string>
 
+    <string name="hud_tspin_mini">MINI T-SPIN!</string>
+    <string name="btn_howto">How to play</string>
+    <string name="settings_gestures">Board gestures (tap = rotate, drag = move)</string>
+    <string name="summary_share">Share result</string>
+    <string name="share_text_fmt">I scored %1$s points, cleared %2$d lines and reached level %3$d in Tetris New Generation!</string>
+
     <!-- Audio toggle chips in game -->
     <string name="chip_music">Music</string>
     <string name="chip_sfx">SFX</string>

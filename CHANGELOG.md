@@ -31,6 +31,20 @@
 - Release flow: bump `versionCode` + `versionName` → add a CHANGELOG entry → commit → `git tag vX.Y.Z && git push origin vX.Y.Z` → CI runs tests, builds, and publishes the release with the APK automatically.
 - CI guard: a tag not matching `versionName` fails the build with a clear error.
 
+## [1.1.0] — 2026-10-25
+
+### Added | إضافات
+- **Mini T-Spin distinction**: pure `TSpinRules` classification (full vs mini by front-corner rule), separate guideline scoring (mini: 100/200/400 × level; full: 400/800/1200/1600), mini clears count for Back-to-Back, and dedicated `TSPIN_MINI` / `B2B` event banners.
+- **Visible event banner** in the game screen: TETRIS / T-SPIN / MINI T-SPIN / Back-to-Back / PERFECT CLEAR / COMBO / LEVEL UP — localized AR/EN, non-blocking, auto-dismisses.
+- **Optional board gestures** (Settings): tap = rotate, horizontal drag = move (cell-per-step), drag down = soft drop. The on-screen button pad always remains available as the primary control.
+- **"How to play" screen** (AR/EN): goal, controls (buttons + gestures), full scoring table including mini T-spin and B2B — shown once on first launch, always reachable from Home.
+- **Share round result** from the summary dialog via the system share sheet (text-only, zero permissions, fully offline).
+- **New content**: puzzles 9–12 (hand-verified unobstructed descent corridors) and adventure stages 11–15 — including the first garbage-clear stage, a 60-second score storm, a survival-ramp stage, a combo-target stage and a level-8 finale (12 puzzles / 15 stages total).
+- **10 new unit tests**: mini/full T-spin classification + scoring + B2B interplay, and catalog structural validation — total **57 tests**.
+
+### Changed | تغييرات
+- `versionCode` 2 → 3, `versionName` 1.0.1 → 1.1.0.
+
 ## [1.0.1] — 2026-10-25
 
 ### Added | إضافات

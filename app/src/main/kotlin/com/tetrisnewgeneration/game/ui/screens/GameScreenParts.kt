@@ -3,6 +3,7 @@ package com.tetrisnewgeneration.game.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -172,6 +173,43 @@ fun GameControls(
     }
 }
 
+/** Touch control pad with DAS-style auto repeat on press-and-hold. */
+@Composable
+fun BoardGestureLayer(onAction: (GameAction) -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                var accX = 0f
+                var accY = 0f
+                detectTapGestures { _ -> onAction(GameAction.RotateCw) }
+            }
+            .pointerInput(Unit) {
+                var accX = 0f
+                var accY = 0f
+                var dragged = false
+                detectDragGestures(
+                    onDragStart = { accX = 0f; accY = 0f; dragged = false },
+                    onDrag = { change, amount ->
+                        change.consume()
+                        accX += amount.x
+                        accY += amount.y
+                        val cell = size.width / 10f
+                        while (accX >= cell) { onAction(GameAction.MoveRight); accX -= cell; dragged = true }
+                        while (accX <= -cell) { onAction(GameAction.MoveLeft); accX += cell; dragged = true }
+                        if (accY >= cell * 1.2f) { onAction(GameAction.SoftDropOn); dragged = true }
+                    },
+                    onDragEnd = {
+                        onAction(GameAction.SoftDropOff)
+                    },
+                    onDragCancel = {
+                        onAction(GameAction.SoftDropOff)
+                    }
+                )
+            }
+    )
+}
+
 @Composable
 private fun ControlButton(
     theme: ThemeDef,
@@ -310,7 +348,8 @@ fun RoundSummaryDialog(
     modeKey: String,
     onRetry: () -> Unit,
     onNextStage: () -> Unit,
-    onHome: () -> Unit
+    onHome: () -> Unit,
+    onShare: () -> Unit
 ) {
     val won = ui.won
     val isChallenge = modeKey.startsWith("ch_")
@@ -416,6 +455,8 @@ fun RoundSummaryDialog(
                 Spacer(Modifier.height(8.dp))
             }
             SummaryAction(stringResource(R.string.summary_retry), theme, onRetry)
+            Spacer(Modifier.height(8.dp))
+            SummaryAction(stringResource(R.string.summary_share), theme, onShare)
             Spacer(Modifier.height(8.dp))
             SummaryAction(stringResource(R.string.summary_home), theme, onHome)
 
