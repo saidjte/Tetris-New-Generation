@@ -1,11 +1,16 @@
 package com.tetrisnewgeneration.game.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -96,9 +101,15 @@ fun GameScreen(
     var flashAlpha by remember { mutableStateOf(0f) }
     var flashColor by remember { mutableStateOf(Color.White) }
     var bannerText by remember { mutableStateOf<String?>(null) }
+    var bannerVisible by remember { mutableStateOf(false) }
+    var bannerColor by remember { mutableStateOf(theme.accent) }
 
     fun haptic() {
         if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+    }
+
+    fun hapticLight() {
+        if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     }
 
     // Start or resume the round once.
@@ -114,6 +125,8 @@ fun GameScreen(
     }
 
     // Celebration toasts trigger banner text + flash + particles + haptics.
+    // v2: every kind is color-coded, haptic-confirmed and stays long enough
+    // to be read mid-game; big moments last longer than small ones.
     LaunchedEffect(ui.toastSeq) {
         if (ui.toastSeq == 0) return@LaunchedEffect
         val kind = ui.toastKind ?: return@LaunchedEffect
@@ -127,35 +140,61 @@ fun GameScreen(
             GameViewModel.ToastKind.RECORD -> context.getString(R.string.hud_new_record)
             GameViewModel.ToastKind.COMBO -> context.getString(R.string.hud_combo, ui.combo)
         }
+        bannerColor = when (kind) {
+            GameViewModel.ToastKind.TETRIS -> Color(0xFF22D3EE)
+            GameViewModel.ToastKind.TSPIN -> Color(0xFFA855F7)
+            GameViewModel.ToastKind.TSPIN_MINI -> Color(0xFFC084FC)
+            GameViewModel.ToastKind.B2B -> Color(0xFFF97316)
+            GameViewModel.ToastKind.PERFECT -> Color(0xFFFACC15)
+            GameViewModel.ToastKind.LEVEL_UP -> Color(0xFF4ADE80)
+            GameViewModel.ToastKind.RECORD -> Color(0xFFFCD34D)
+            GameViewModel.ToastKind.COMBO -> Color(0xFF38BDF8)
+        }
         when (kind) {
             GameViewModel.ToastKind.TETRIS -> {
-                haptic(); flashColor = theme.accent; flashAlpha = 0.35f
-                spawnBurst(particles, density = 40, color = theme.accent, width = 10f)
+                haptic(); flashColor = Color(0xFF22D3EE); flashAlpha = 0.45f
+                spawnBurst(particles, density = 40, color = Color(0xFF22D3EE), width = 10f)
             }
             GameViewModel.ToastKind.TSPIN -> {
-                haptic(); flashColor = Color(0xFFA855F7); flashAlpha = 0.3f
+                haptic(); flashColor = Color(0xFFA855F7); flashAlpha = 0.38f
                 spawnBurst(particles, density = 26, color = Color(0xFFA855F7), width = 10f)
             }
+            GameViewModel.ToastKind.TSPIN_MINI -> {
+                hapticLight(); flashColor = Color(0xFFC084FC); flashAlpha = 0.28f
+            }
+            GameViewModel.ToastKind.B2B -> {
+                haptic(); flashColor = Color(0xFFF97316); flashAlpha = 0.32f
+            }
             GameViewModel.ToastKind.PERFECT -> {
-                haptic(); flashColor = Color(0xFFFACC15); flashAlpha = 0.4f
+                haptic(); flashColor = Color(0xFFFACC15); flashAlpha = 0.5f
                 spawnBurst(particles, density = 50, color = Color(0xFFFACC15), width = 10f)
             }
             GameViewModel.ToastKind.LEVEL_UP -> {
-                flashColor = theme.accent; flashAlpha = 0.25f
+                hapticLight(); flashColor = Color(0xFF4ADE80); flashAlpha = 0.3f
             }
             GameViewModel.ToastKind.COMBO -> {
-                spawnBurst(particles, density = 14, color = theme.accent, width = 10f)
+                hapticLight()
+                spawnBurst(particles, density = 14, color = Color(0xFF38BDF8), width = 10f)
             }
             GameViewModel.ToastKind.RECORD -> {
-                haptic(); flashColor = Color(0xFFFCD34D); flashAlpha = 0.45f
+                haptic(); flashColor = Color(0xFFFCD34D); flashAlpha = 0.5f
                 spawnBurst(particles, density = 60, color = Color(0xFFFCD34D), width = 10f)
             }
-            else -> {
-                flashColor = theme.accent; flashAlpha = 0.2f
-            }
         }
-        delay(1200)
-        bannerText = null
+        bannerVisible = true
+        // Big moments stay on screen longer so they are never missed.
+        delay(
+            when (kind) {
+                GameViewModel.ToastKind.TETRIS,
+                GameViewModel.ToastKind.PERFECT,
+                GameViewModel.ToastKind.RECORD -> 1800L
+                GameViewModel.ToastKind.TSPIN,
+                GameViewModel.ToastKind.B2B,
+                GameViewModel.ToastKind.LEVEL_UP -> 1500L
+                else -> 1300L
+            }
+        )
+        bannerVisible = false
     }
 
     // Particle physics loop.
@@ -201,6 +240,18 @@ fun GameScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(theme.backgroundTop)) {
+        // Full-screen gesture layer sits at the BOTTOM of the box: every
+        // button, HUD control and dialog above it wins hit-testing first, so
+        // gestures only receive touches on empty space — the whole screen
+        // becomes the touch surface while the button pad stays functional.
+        if (gestureControls && !ui.paused && !ui.finished) {
+            BoardGestureLayer(
+                onAction = { vm.onAction(it) },
+                onHapticLight = { hapticLight() },
+                onHapticStrong = { haptic() }
+            )
+        }
+
         Column(
             modifier = Modifier.fillMaxSize().padding(8.dp)
         ) {
@@ -256,7 +307,8 @@ fun GameScreen(
                     }
                 }
 
-                // Board + optional gesture overlay share the weighted middle slot.
+                // The board shares the weighted middle slot; full-screen
+                // gestures are handled by the layer at the bottom of the root box.
                 Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                     BoardCanvas(
                         theme = theme,
@@ -271,12 +323,6 @@ fun GameScreen(
                             .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
                     )
-
-                    // Optional board gestures (tap = rotate, drag = move/soft-drop).
-                    // The button pad always remains available as the primary control.
-                    if (gestureControls && !ui.paused && !ui.finished) {
-                        BoardGestureLayer(onAction = { vm.onAction(it) })
-                    }
                 }
 
                 Column(
@@ -301,20 +347,33 @@ fun GameScreen(
             )
         }
 
-        // Transient event banner (T-SPIN / B2B / TETRIS ...)
-        bannerText?.let { txt ->
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-                Text(
-                    txt,
-                    color = theme.textPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
-                    modifier = Modifier
-                        .padding(top = 88.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(theme.surface.copy(alpha = 0.92f))
-                        .border(1.dp, theme.accent.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+        // Transient event banner (T-SPIN / B2B / TETRIS ...) — big, animated,
+        // color-coded and pulsing so it is impossible to miss mid-game.
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            AnimatedVisibility(
+                visible = bannerVisible,
+                enter = if (reducedMotion) {
+                    fadeIn()
+                } else {
+                    scaleIn(
+                        initialScale = 0.55f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        )
+                    ) + fadeIn()
+                },
+                exit = if (reducedMotion) {
+                    fadeOut()
+                } else {
+                    scaleOut(targetScale = 0.85f, animationSpec = tween(150)) +
+                        fadeOut(animationSpec = tween(150))
+                }
+            ) {
+                EventBanner(
+                    text = bannerText.orEmpty(),
+                    accent = bannerColor,
+                    pulse = rememberBannerPulse(reducedMotion)
                 )
             }
         }

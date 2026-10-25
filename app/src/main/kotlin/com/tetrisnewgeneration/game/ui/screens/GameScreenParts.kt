@@ -1,5 +1,11 @@
 package com.tetrisnewgeneration.game.ui.screens
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,6 +36,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
@@ -173,40 +181,134 @@ fun GameControls(
     }
 }
 
-/** Touch control pad with DAS-style auto repeat on press-and-hold. */
+/**
+ * Full-screen gesture layer (v2). It is composed as the BOTTOM child of the
+ * screen box, so every button, HUD control and dialog drawn above it wins
+ * hit-testing first — gestures only receive touches on empty space, which
+ * turns the whole screen into the touch surface while the button pad stays
+ * fully functional.
+ *
+ * Scheme (each action confirmed by a haptic tick):
+ *   tap anywhere          -> rotate clockwise
+ *   horizontal drag       -> move one cell per step
+ *   slow drag down        -> soft drop while the finger is down
+ *   fast flick down       -> hard drop on release
+ *   deliberate drag up    -> hold
+ */
 @Composable
-fun BoardGestureLayer(onAction: (GameAction) -> Unit) {
+fun BoardGestureLayer(
+    onAction: (GameAction) -> Unit,
+    onHapticLight: () -> Unit,
+    onHapticStrong: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                var accX = 0f
-                var accY = 0f
-                detectTapGestures { _ -> onAction(GameAction.RotateCw) }
+                detectTapGestures {
+                    onHapticStrong()
+                    onAction(GameAction.RotateCw)
+                }
             }
             .pointerInput(Unit) {
                 var accX = 0f
                 var accY = 0f
-                var dragged = false
+                var softDropping = false
+                var velocity = 0f          // smoothed px/ms, > 0 downward
+                var lastTimeMs = 0L
                 detectDragGestures(
-                    onDragStart = { accX = 0f; accY = 0f; dragged = false },
+                    onDragStart = {
+                        accX = 0f; accY = 0f
+                        softDropping = false
+                        velocity = 0f
+                        lastTimeMs = System.currentTimeMillis()
+                    },
                     onDrag = { change, amount ->
                         change.consume()
+                        val now = System.currentTimeMillis()
+                        val dt = (now - lastTimeMs).coerceAtLeast(1L)
+                        lastTimeMs = now
                         accX += amount.x
                         accY += amount.y
+                        velocity = 0.65f * velocity + 0.35f * (amount.y / dt)
                         val cell = size.width / 10f
-                        while (accX >= cell) { onAction(GameAction.MoveRight); accX -= cell; dragged = true }
-                        while (accX <= -cell) { onAction(GameAction.MoveLeft); accX += cell; dragged = true }
-                        if (accY >= cell * 1.2f) { onAction(GameAction.SoftDropOn); dragged = true }
+                        while (accX >= cell) {
+                            onHapticLight(); onAction(GameAction.MoveRight); accX -= cell
+                        }
+                        while (accX <= -cell) {
+                            onHapticLight(); onAction(GameAction.MoveLeft); accX += cell
+                        }
+                        if (!softDropping && accY >= cell) {
+                            softDropping = true
+                            onAction(GameAction.SoftDropOn)
+                        }
+                        if (accY < 0f) softDropping = false // upward correction cancels soft drop
                     },
                     onDragEnd = {
-                        onAction(GameAction.SoftDropOff)
+                        if (softDropping) onAction(GameAction.SoftDropOff)
+                        val cell = size.width / 10f
+                        when (
+                            GestureClassifier.classify(
+                                totalDownPx = accY.coerceAtLeast(0f),
+                                totalUpPx = (-accY).coerceAtLeast(0f),
+                                velocityPxMs = velocity,
+                                cellPx = cell
+                            )
+                        ) {
+                            GestureClassifier.EndGesture.HARD_DROP -> {
+                                onHapticStrong(); onAction(GameAction.HardDrop)
+                            }
+                            GestureClassifier.EndGesture.HOLD -> {
+                                onHapticStrong(); onAction(GameAction.Hold)
+                            }
+                            GestureClassifier.EndGesture.NONE -> Unit
+                        }
                     },
                     onDragCancel = {
-                        onAction(GameAction.SoftDropOff)
+                        if (softDropping) onAction(GameAction.SoftDropOff)
                     }
                 )
             }
+    )
+}
+
+/** Gentle infinite pulse that keeps the event banner alive on screen. */
+@Composable
+internal fun rememberBannerPulse(reducedMotion: Boolean): Float {
+    if (reducedMotion) return 1f
+    val transition = rememberInfiniteTransition(label = "bannerPulse")
+    return transition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.06f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(420, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bannerScale"
+    ).value
+}
+
+/**
+ * The big color-coded event pill (v2): near-opaque dark scrim so it reads on
+ * any theme, accent-colored bold text, accent border and a soft shadow.
+ */
+@Composable
+internal fun EventBanner(text: String, accent: Color, pulse: Float) {
+    Text(
+        text,
+        color = accent,
+        fontWeight = FontWeight.Black,
+        fontSize = 24.sp,
+        letterSpacing = 1.5.sp,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .padding(top = 96.dp)
+            .scale(pulse)
+            .shadow(elevation = 10.dp, shape = RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xF0050713))
+            .border(2.dp, accent, RoundedCornerShape(16.dp))
+            .padding(horizontal = 24.dp, vertical = 12.dp)
     )
 }
 

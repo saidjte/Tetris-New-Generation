@@ -76,11 +76,11 @@ fun HowToPlayScreen(
                     lineHeight = 18.sp
                 )
                 Spacer(Modifier.height(8.dp))
-                HowRow(theme, localizedText("إيماءات اللوحة (اختيارية من الإعدادات)", "Board gestures (optional, from Settings)"))
+                HowRow(theme, localizedText("إيماءات اللمس (اختيارية من الإعدادات)", "Touch gestures (optional, from Settings)"))
                 Text(
                     localizedText(
-                        "نقرة على اللوحة = دوران • سحب أفقي = تحريك (خلية بخطوة) • سحب لأسفل = هبوط ناعم",
-                        "Tap the board = rotate • horizontal drag = move (one cell per step) • drag down = soft drop"
+                        "تعمل على كامل شاشة اللعب ويؤكدها اهتزاز:\n• نقرة في أي مكان = دوران القطعة\n• سحب أفقي = تحريك (خلية بخطوة)\n• سحب لأسفل ببطء = هبوط ناعم\n• سحب سريع لأسفل = إسقاط فوري\n• سحب لأعلى = حفظ القطعة (Hold)\nالأزرار على الشاشة تبقى تعمل في كل الأحوال.",
+                        "Gestures work across the whole play screen, each confirmed by a haptic tick:\n• Tap anywhere = rotate\n• Horizontal drag = move (one cell per step)\n• Slow drag down = soft drop\n• Fast flick down = hard drop\n• Swipe up = hold\nThe on-screen buttons always remain available."
                     ),
                     color = theme.textPrimary.copy(alpha = 0.85f),
                     fontSize = 12.sp,

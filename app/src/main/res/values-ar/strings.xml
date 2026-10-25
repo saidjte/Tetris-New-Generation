@@ -138,7 +138,7 @@
 
     <string name="hud_tspin_mini">سبين مصغّر!</string>
     <string name="btn_howto">كيف تلعب</string>
-    <string name="settings_gestures">إيماءات اللوحة (نقر = دوران، سحب = تحريك)</string>
+    <string name="settings_gestures">إيماءات اللمس — بكامل الشاشة (نقر = دوران، سحب = تحريك، سحب سريع لأسفل = إسقاط فوري، سحب لأعلى = حفظ)</string>
     <string name="summary_share">مشاركة النتيجة</string>
     <string name="share_text_fmt">حققت %1$s نقطة ومسحت %2$d صفوفاً ووصلت إلى المستوى %3$d في تيتريس الجيل الجديد!</string>
 

@@ -31,6 +31,26 @@
 - Release flow: bump `versionCode` + `versionName` → add a CHANGELOG entry → commit → `git tag vX.Y.Z && git push origin vX.Y.Z` → CI runs tests, builds, and publishes the release with the APK automatically.
 - CI guard: a tag not matching `versionName` fails the build with a clear error.
 
+## [1.2.0] — 2026-10-26
+
+### Changed | تغييرات
+- **Touch gestures v2 — full-screen and impossible to miss** (based on real-device feedback that the board-only gestures felt weak):
+  - Gesture surface expanded from the board box to the **entire play screen**; buttons, HUD and dialogs keep hit-testing priority so nothing breaks.
+  - **Fast flick down = hard drop** (velocity-verified) — the classic slam gesture now exists; slow drag down remains soft drop.
+  - **Swipe up = hold** — deliberate upward drag swaps the piece.
+  - **Haptic tick on every gesture action** (light for cell moves, strong for rotate/hard-drop/hold) so each gesture is felt, not just seen.
+  - Soft drop now starts after ~1 cell of downward travel (was 1.2) and cancels immediately on upward correction.
+- **Event banner v2 — bigger, animated, color-coded** (based on real-device feedback that it was barely noticeable):
+  - Text enlarged 17sp → **24sp black-weight** with accent letter-spacing, on a near-opaque dark pill readable on any theme.
+  - **Color-coded per event** (TETRIS cyan, T-SPIN purple, MINI lilac, B2B orange, PERFECT gold, LEVEL-UP green, RECORD yellow, COMBO sky).
+  - **Spring scale-in pop + fade** on entry, smooth shrink-out on exit, plus a gentle infinite pulse while visible (all disabled under reduced-motion).
+  - **Duration now scales with the moment**: 1.8s for TETRIS/PERFECT/RECORD, 1.5s for T-SPIN/B2B/LEVEL-UP, 1.3s for MINI/COMBO (was flat 1.2s).
+  - **Every kind now confirms with haptics** — LEVEL-UP, COMBO, MINI and B2B previously stayed silent.
+- New pure `GestureClassifier` (flick/hold decisions) with **10 JVM unit tests** — total suite now **67 tests**.
+
+### Updated docs | توثيق
+- Settings label, "How to play" screen (AR/EN) and README now describe the full-screen gesture scheme.
+
 ## [1.1.0] — 2026-10-25
 
 ### Added | إضافات
