@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">تيتريس الجيل الجديد</string>
+    <string name="app_name_ar">تيتريس الجيل الجديد</string>
+    <string name="tagline">تجربة قطع متساقطة عصرية — تعمل دون إنترنت بالكامل</string>
+
+    <!-- Home -->
+    <string name="btn_play">العب الآن</string>
+    <string name="btn_continue">متابعة آخر جلسة</string>
+    <string name="btn_modes">أنماط اللعب</string>
+    <string name="btn_store">المتجر</string>
+    <string name="btn_tasks">المهام والإنجازات</string>
+    <string name="btn_stats">الإحصائيات</string>
+    <string name="btn_settings">الإعدادات</string>
+    <string name="player_level">مستوى اللاعب %1$d</string>
+    <string name="coins_label">العملات</string>
+    <string name="xp_to_next">%1$d نقطة خبرة للمستوى التالي</string>
+
+    <!-- Modes -->
+    <string name="modes_title">أنماط اللعب</string>
+    <string name="best_score">الأفضل: %1$s</string>
+    <string name="pick_duration">اختر المدة</string>
+    <string name="pick_difficulty">اختر الصعوبة</string>
+    <string name="minutes_fmt">%1$d دقيقة</string>
+    <string name="level_fmt">المستوى %1$d</string>
+    <string name="locked">مقفل</string>
+    <string name="challenges_title">التحديات</string>
+    <string name="puzzles_title">الألغاز</string>
+    <string name="adventure_title">المغامرة</string>
+    <string name="completed">مكتمل</string>
+    <string name="stage_fmt">المرحلة %1$d</string>
+    <string name="puzzle_fmt">لغز %1$d</string>
+    <string name="pieces_left">القطع المتبقية: %1$d</string>
+
+    <!-- HUD -->
+    <string name="hud_score">النقاط</string>
+    <string name="hud_level">المستوى</string>
+    <string name="hud_lines">الصفوف</string>
+    <string name="hud_time">الوقت</string>
+    <string name="hud_next">التالي</string>
+    <string name="hud_hold">محفوظة</string>
+    <string name="hud_goal">الهدف</string>
+    <string name="hud_combo">سلسلة ×%1$d</string>
+    <string name="hud_tetris">تصفية رباعية!</string>
+    <string name="hud_tspin">تاي سبين!</string>
+    <string name="hud_back_to_back">تتالية!</string>
+    <string name="hud_perfect">تصفية مثالية!</string>
+    <string name="hud_new_record">رقم قياسي جديد!</string>
+    <string name="hud_level_up">المستوى %1$d</string>
+
+    <!-- Game over / summary -->
+    <string name="summary_game_over">انتهت اللعبة</string>
+    <string name="summary_round_complete">اكتملت الجولة!</string>
+    <string name="summary_time_up">انتهى الوقت!</string>
+    <string name="summary_retry">العب مجددًا</string>
+    <string name="summary_home">الرئيسية</string>
+    <string name="summary_next_stage">المرحلة التالية</string>
+    <string name="summary_challenge_done">اكتمل التحدي!</string>
+    <string name="summary_challenge_failed">فشل التحدي — حاول مجددًا</string>
+    <string name="summary_puzzle_done">حُلّ اللغز!</string>
+    <string name="summary_rewards">المكافآت</string>
+    <string name="summary_coins_fmt">+‏%1$d عملة</string>
+    <string name="summary_xp_fmt">+‏%1$d خبرة</string>
+    <string name="summary_level_up_fmt">ترقية! أصبحت في المستوى %1$d</string>
+    <string name="summary_best_fmt">الأفضل: %1$d</string>
+
+    <!-- Pause -->
+    <string name="pause_title">إيقاف مؤقت</string>
+    <string name="pause_resume">استئناف</string>
+    <string name="pause_restart">إعادة الجولة</string>
+    <string name="pause_home">الخروج للرئيسية</string>
+
+    <!-- Store -->
+    <string name="store_title">المتجر</string>
+    <string name="store_tab_themes">الثيمات</string>
+    <string name="store_tab_blocks">القطع</string>
+    <string name="store_tab_effects">المؤثرات</string>
+    <string name="store_tab_sounds">الأصوات</string>
+    <string name="store_owned">مملوك</string>
+    <string name="store_free">مجاني</string>
+    <string name="store_buy">شراء</string>
+    <string name="store_select">تطبيق</string>
+    <string name="store_selected">مُطبَّق</string>
+    <string name="store_confirm_buy">تأكيد الشراء</string>
+    <string name="store_confirm_buy_msg">شراء %1$s مقابل %2$d عملة؟</string>
+    <string name="store_not_enough">العملات غير كافية</string>
+    <string name="store_already_owned">مملوك بالفعل</string>
+    <string name="store_purchased">تم الشراء!</string>
+    <string name="store_default_theme">العودة للثيم الافتراضي</string>
+
+    <!-- Achievements / tasks -->
+    <string name="achievements_title">الإنجازات</string>
+    <string name="daily_tasks_title">المهام اليومية</string>
+    <string name="tab_achievements">الإنجازات</string>
+    <string name="tab_daily">اليومية</string>
+    <string name="claim">استلام</string>
+    <string name="claimed">مستلمة</string>
+    <string name="reward_fmt">+‏%1$d عملة</string>
+    <string name="progress_fmt">%1$d / %2$d</string>
+    <string name="unlocked_at">تحقق</string>
+
+    <!-- Stats -->
+    <string name="stats_title">الإحصائيات</string>
+    <string name="stat_rounds">الجولات الملعوبة</string>
+    <string name="stat_lines">الصفوف الممسوحة</string>
+    <string name="stat_score">مجموع النقاط</string>
+    <string name="stat_tetrises">التصفيات الرباعية</string>
+    <string name="stat_max_combo">أطول سلسلة</string>
+    <string name="stat_max_level">أعلى مستوى</string>
+    <string name="stat_time">إجمالي وقت اللعب</string>
+    <string name="stat_hard_drops">الإسقاطات الفورية</string>
+    <string name="stat_by_mode">أفضل النتائج لكل نمط</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_language">اللغة</string>
+    <string name="lang_system">حسب النظام</string>
+    <string name="lang_arabic">العربية</string>
+    <string name="lang_english">الإنجليزية</string>
+    <string name="settings_sfx">المؤثرات الصوتية</string>
+    <string name="settings_sfx_volume">مستوى المؤثرات</string>
+    <string name="settings_music">الموسيقى</string>
+    <string name="settings_music_volume">مستوى الموسيقى</string>
+    <string name="settings_haptics">الاهتزاز عند الأحداث المهمة</string>
+    <string name="settings_reduced_motion">تقليل الحركة والمؤثرات</string>
+    <string name="settings_theme_hint">اختيار الثيم من داخل المتجر</string>
+    <string name="settings_reset">إعادة تعيين كل التقدم</string>
+    <string name="settings_reset_confirm">سيُحذف كل شيء نهائيًا: النتائج والعملات والخبرة والإنجازات والمشتريات. هل تريد المتابعة؟</string>
+    <string name="settings_reset_done">تمت إعادة التعيين</string>
+    <string name="settings_about">حول اللعبة</string>
+    <string name="about_text">تيتريس الجيل الجديد | Tetris New Generation — لعبة ألغاز أصلية بقطع متساقطة تعمل دون إنترنت. مشروع مشجعين غير رسمي؛ غير مرتبط بشركة The Tetris Company ولا معتمد منها.</string>
+    <string name="cancel">إلغاء</string>
+    <string name="confirm">تأكيد</string>
+    <string name="ok">حسنًا</string>
+    <string name="close">إغلاق</string>
+    <string name="on">مفعّل</string>
+    <string name="off">معطّل</string>
+
+    <!-- Audio toggle chips in game -->
+    <string name="chip_music">الموسيقى</string>
+    <string name="chip_sfx">المؤثرات</string>
+</resources>

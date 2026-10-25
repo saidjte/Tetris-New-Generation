@@ -1,0 +1,32 @@
+[
+  {"id":"classic_night","category":"THEME","price":0,"free":true},
+  {"id":"minimal","category":"THEME","price":0,"free":true},
+  {"id":"neon","category":"THEME","price":120,"free":false},
+  {"id":"galaxy","category":"THEME","price":150,"free":false},
+  {"id":"aurora","category":"THEME","price":150,"free":false},
+  {"id":"retro","category":"THEME","price":100,"free":false},
+  {"id":"crystal","category":"THEME","price":140,"free":false},
+  {"id":"lava","category":"THEME","price":140,"free":false},
+  {"id":"ocean","category":"THEME","price":110,"free":false},
+  {"id":"monochrome","category":"THEME","price":90,"free":false},
+  {"id":"golden","category":"THEME","price":200,"free":false},
+  {"id":"nature","category":"THEME","price":120,"free":false},
+  {"id":"pixel","category":"THEME","price":130,"free":false},
+
+  {"id":"blocks_standard","category":"BLOCK_PACK","price":0,"free":true},
+  {"id":"blocks_glow","category":"BLOCK_PACK","price":80,"free":false},
+  {"id":"blocks_outline","category":"BLOCK_PACK","price":60,"free":false},
+  {"id":"blocks_geo","category":"BLOCK_PACK","price":60,"free":false},
+  {"id":"blocks_contrast","category":"BLOCK_PACK","price":90,"free":false},
+
+  {"id":"fx_sparks","category":"EFFECT_PACK","price":0,"free":true},
+  {"id":"fx_burst","category":"EFFECT_PACK","price":70,"free":false},
+  {"id":"fx_trail","category":"EFFECT_PACK","price":70,"free":false},
+  {"id":"fx_shatter","category":"EFFECT_PACK","price":90,"free":false},
+  {"id":"fx_confetti","category":"EFFECT_PACK","price":100,"free":false},
+
+  {"id":"sfx_original","category":"SOUND_PACK","price":0,"free":true},
+  {"id":"sfx_arcade","category":"SOUND_PACK","price":80,"free":false},
+  {"id":"sfx_future","category":"SOUND_PACK","price":90,"free":false},
+  {"id":"sfx_calm","category":"SOUND_PACK","price":80,"free":false}
+]

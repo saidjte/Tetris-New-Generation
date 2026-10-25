@@ -1,0 +1,367 @@
+package com.tetrisnewgeneration.game.ui.components
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import com.tetrisnewgeneration.game.engine.PieceType
+import com.tetrisnewgeneration.game.themes.BlockStyle
+import com.tetrisnewgeneration.game.themes.BackgroundFx
+import com.tetrisnewgeneration.game.themes.ThemeDef
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.random.Random
+
+/** Lightweight particle for line-clear effects. */
+class Particle(
+    var x: Float, var y: Float,
+    var vx: Float, var vy: Float,
+    var life: Float,           // 1.0 -> 0.0
+    val decay: Float,
+    val size: Float,
+    val color: Color,
+    val spin: Float = 0f
+) {
+    var angle: Float = 0f
+}
+
+/**
+ * High-performance playfield renderer: grid, locked cells, ghost piece, active
+ * piece, background FX, particles and flashes. One Canvas, no per-frame
+ * allocations beyond particles.
+ */
+@Composable
+fun rememberFrameTimeMs(enabled: Boolean): Long {
+    var frame by remember { mutableStateOf(0L) }
+    if (enabled) {
+        LaunchedEffect(Unit) {
+            while (true) {
+                withFrameNanos { frame = it / 1_000_000L }
+            }
+        }
+    }
+    return frame
+}
+
+@Composable
+fun BoardCanvas(
+    theme: ThemeDef,
+    boardGrid: List<List<Int>>,
+    activeCells: List<Triple<Int, Int, Int>>,
+    ghostCells: List<Pair<Int, Int>>,
+    particles: List<Particle>,
+    flashAlpha: Float,
+    flashColor: Color,
+    reducedMotion: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val frameMs = rememberFrameTimeMs(!reducedMotion)
+    val pieceColors = remember(theme) {
+        PieceType.entries.map { theme.colorOf(it) }
+    }
+
+    Canvas(modifier = modifier) {
+        val cols = 10
+        val visibleRows = 20
+        val cell = kotlin.math.min(size.width / cols, size.height / visibleRows)
+        val boardW = cell * cols
+        val boardH = cell * visibleRows
+        val offsetX = (size.width - boardW) / 2f
+        val offsetY = (size.height - boardH) / 2f
+
+        // Board background
+        drawRoundRect(
+            color = theme.boardBackground,
+            topLeft = Offset(offsetX, offsetY),
+            size = Size(boardW, boardH),
+            cornerRadius = CornerRadius(8f, 8f)
+        )
+
+        drawBackgroundFx(theme.backgroundFx, offsetX, offsetY, boardW, boardH, frameMs, theme)
+
+        // Grid lines
+        val grid = theme.gridLine
+        var i = 1
+        while (i < cols) {
+            drawLine(grid, Offset(offsetX + i * cell, offsetY),
+                Offset(offsetX + i * cell, offsetY + boardH), 1f)
+            i++
+        }
+        i = 1
+        while (i < visibleRows) {
+            drawLine(grid, Offset(offsetX, offsetY + i * cell),
+                Offset(offsetX + boardW, offsetY + i * cell), 1f)
+            i++
+        }
+
+        // Ghost piece (outline)
+        for ((gx, gy) in ghostCells) {
+            if (gy < 0) continue
+            val row = gy - 2 // buffer rows above the visible area
+            if (row < 0) continue
+            val color = pieceColors[activeCells.firstOrNull()?.third ?: 0]
+            drawRoundRect(
+                color = color.copy(alpha = 0.28f),
+                topLeft = Offset(offsetX + gx * cell + 2, offsetY + row * cell + 2),
+                size = Size(cell - 4, cell - 4),
+                cornerRadius = CornerRadius(6f, 6f),
+                style = Stroke(width = 2f)
+            )
+        }
+
+        // Locked cells
+        for (y in 2 until minOf(boardGrid.size, 22)) {
+            if (y - 2 >= visibleRows) continue
+            val rowGrid = boardGrid[y]
+            for (x in 0 until minOf(rowGrid.size, cols)) {
+                val v = rowGrid[x]
+                if (v > 0) {
+                    drawBlock(
+                        offsetX + x * cell, offsetY + (y - 2) * cell, cell,
+                        pieceColors[v - 1], theme.blockStyle
+                    )
+                }
+            }
+        }
+
+        // Active piece
+        for ((ax, ay, at) in activeCells) {
+            val row = ay - 2
+            if (row < 0) continue
+            drawBlock(
+                offsetX + ax * cell, offsetY + row * cell, cell,
+                pieceColors[at], theme.blockStyle
+            )
+        }
+
+        // Particles
+        for (p in particles) {
+            drawCircle(
+                color = p.color.copy(alpha = p.life.coerceIn(0f, 1f)),
+                radius = p.size * (0.5f + p.life / 2f),
+                center = Offset(offsetX + p.x, offsetY + p.y)
+            )
+        }
+
+        // Event flash overlay
+        if (flashAlpha > 0.01f) {
+            drawRoundRect(
+                color = flashColor.copy(alpha = flashAlpha),
+                topLeft = Offset(offsetX, offsetY),
+                size = Size(boardW, boardH),
+                cornerRadius = CornerRadius(8f, 8f)
+            )
+        }
+
+        // Border
+        drawRoundRect(
+            color = theme.boardBorder,
+            topLeft = Offset(offsetX, offsetY),
+            size = Size(boardW, boardH),
+            cornerRadius = CornerRadius(8f, 8f),
+            style = Stroke(width = 3f)
+        )
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBlock(
+    x: Float, y: Float, cell: Float, color: Color, style: BlockStyle
+) {
+    val pad = cell * 0.06f
+    when (style) {
+        BlockStyle.GLOW -> {
+            drawRoundRect(
+                color = color.copy(alpha = 0.25f),
+                topLeft = Offset(x - 2, y - 2),
+                size = Size(cell + 4, cell + 4),
+                cornerRadius = CornerRadius(cell * 0.2f, cell * 0.2f)
+            )
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(x + pad, y + pad),
+                size = Size(cell - pad * 2, cell - pad * 2),
+                cornerRadius = CornerRadius(cell * 0.18f, cell * 0.18f)
+            )
+            drawRoundRect(
+                color = Color.White.copy(alpha = 0.22f),
+                topLeft = Offset(x + pad, y + pad),
+                size = Size(cell - pad * 2, (cell - pad * 2) * 0.4f),
+                cornerRadius = CornerRadius(cell * 0.14f, cell * 0.14f)
+            )
+        }
+        BlockStyle.OUTLINE -> {
+            drawRoundRect(
+                color = Color(0xFF0A0D18),
+                topLeft = Offset(x + pad, y + pad),
+                size = Size(cell - pad * 2, cell - pad * 2),
+                cornerRadius = CornerRadius(cell * 0.16f, cell * 0.16f)
+            )
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(x + pad, y + pad),
+                size = Size(cell - pad * 2, cell - pad * 2),
+                cornerRadius = CornerRadius(cell * 0.16f, cell * 0.16f),
+                style = Stroke(width = cell * 0.1f)
+            )
+        }
+        BlockStyle.GEO -> {
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(x + pad, y + pad),
+                size = Size(cell - pad * 2, cell - pad * 2),
+                cornerRadius = CornerRadius(cell * 0.1f, cell * 0.1f)
+            )
+            val path = Path().apply {
+                moveTo(x + pad, y + pad)
+                lineTo(x + cell - pad, y + pad)
+                lineTo(x + pad, y + cell - pad)
+                close()
+            }
+            drawPath(path, Color.White.copy(alpha = 0.28f))
+        }
+        BlockStyle.CONTRAST -> {
+            drawRoundRect(
+                color = Color.Black,
+                topLeft = Offset(x + 1, y + 1),
+                size = Size(cell - 2, cell - 2),
+                cornerRadius = CornerRadius(cell * 0.14f, cell * 0.14f)
+            )
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(x + cell * 0.12f, y + cell * 0.12f),
+                size = Size(cell * 0.76f, cell * 0.76f),
+                cornerRadius = CornerRadius(cell * 0.1f, cell * 0.1f)
+            )
+        }
+        BlockStyle.PIXEL -> {
+            drawRect(
+                color = color,
+                topLeft = Offset(x + 1, y + 1),
+                size = Size(cell - 2, cell - 2)
+            )
+            drawRect(
+                color = Color.White.copy(alpha = 0.18f),
+                topLeft = Offset(x + 2, y + 2),
+                size = Size(cell - 4, (cell - 4) * 0.3f)
+            )
+            drawRect(
+                color = Color.Black.copy(alpha = 0.35f),
+                topLeft = Offset(x + 2, y + cell * 0.7f),
+                size = Size(cell - 4, cell * 0.28f)
+            )
+        }
+        BlockStyle.STANDARD -> {
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(x + pad, y + pad),
+                size = Size(cell - pad * 2, cell - pad * 2),
+                cornerRadius = CornerRadius(cell * 0.18f, cell * 0.18f)
+            )
+            drawRoundRect(
+                color = Color.White.copy(alpha = 0.20f),
+                topLeft = Offset(x + pad, y + pad),
+                size = Size(cell - pad * 2, (cell - pad * 2) * 0.35f),
+                cornerRadius = CornerRadius(cell * 0.12f, cell * 0.12f)
+            )
+        }
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBackgroundFx(
+    fx: BackgroundFx,
+    x: Float, y: Float, w: Float, h: Float,
+    frameMs: Long,
+    theme: ThemeDef
+) {
+    when (fx) {
+        BackgroundFx.NONE -> Unit
+        BackgroundFx.PULSE -> {
+            val t = (frameMs % 4000) / 4000f
+            val alpha = 0.05f + 0.05f * sin(t * 2f * Math.PI.toFloat())
+            drawRoundRect(
+                color = theme.accent.copy(alpha = alpha),
+                topLeft = Offset(x, y), size = Size(w, h),
+                cornerRadius = CornerRadius(8f, 8f)
+            )
+        }
+        BackgroundFx.STARS -> {
+            val rng = Random(42)
+            for (i in 0 until 40) {
+                val sx = x + rng.nextFloat() * w
+                val sy = y + rng.nextFloat() * h
+                val phase = (frameMs % 3000 + i * 137) % 3000 / 3000f
+                val alpha = 0.25f + 0.45f * (0.5f + 0.5f * sin(phase * 2f * Math.PI.toFloat()))
+                drawCircle(
+                    color = Color.White.copy(alpha = alpha),
+                    radius = 1.5f + (i % 3),
+                    center = Offset(sx, sy)
+                )
+            }
+        }
+        BackgroundFx.AURORA -> {
+            val t = (frameMs % 6000) / 6000f
+            for (band in 0 until 3) {
+                val cy = y + h * (0.2f + band * 0.25f) + 20f * sin((t + band) * 2f * Math.PI.toFloat())
+                drawCircle(
+                    color = (if (band % 2 == 0) Color(0xFF2DD4BF) else Color(0xFF818CF8))
+                        .copy(alpha = 0.08f),
+                    radius = h * 0.16f,
+                    center = Offset(x + w * (0.3f + 0.4f * t * ((band % 2) * 2 - 1)), cy)
+                )
+            }
+        }
+        BackgroundFx.EMBERS -> {
+            val rng = Random(7)
+            for (i in 0 until 24) {
+                val bx = x + rng.nextFloat() * w
+                val speed = 12f + rng.nextFloat() * 18f
+                val by = y + h - ((frameMs / 16f * speed / 10f + i * 60f) % h)
+                val alpha = 0.35f * (1f - by / h)
+                drawCircle(
+                    color = Color(0xFFFB923C).copy(alpha = alpha),
+                    radius = 2f + (i % 2),
+                    center = Offset(bx, by)
+                )
+            }
+        }
+        BackgroundFx.WAVES -> {
+            val t = (frameMs % 5000) / 5000f
+            for (band in 0 until 2) {
+                val cy = y + h * (0.3f + band * 0.4f) + 14f * sin((t + band * 0.5f) * 2f * Math.PI.toFloat())
+                drawCircle(
+                    color = theme.accent.copy(alpha = 0.06f),
+                    radius = h * 0.2f,
+                    center = Offset(x + w / 2, cy)
+                )
+            }
+        }
+        BackgroundFx.SNOW -> {
+            val rng = Random(11)
+            for (i in 0 until 26) {
+                val bx = x + rng.nextFloat() * w
+                val speed = 8f + rng.nextFloat() * 14f
+                val by = y + ((frameMs / 16f * speed / 10f + i * 47f) % h)
+                val sway = 8f * sin((frameMs / 700f) + i)
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.16f),
+                    radius = 1.5f + (i % 3),
+                    center = Offset(bx + sway, by)
+                )
+            }
+        }
+    }
+}

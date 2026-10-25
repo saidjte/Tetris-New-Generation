@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tetris New Generation</string>
+    <string name="app_name_ar">تيتريس الجيل الجديد</string>
+    <string name="tagline">A modern falling-blocks experience — fully offline</string>
+
+    <!-- Home -->
+    <string name="btn_play">Play</string>
+    <string name="btn_continue">Continue last session</string>
+    <string name="btn_modes">Game modes</string>
+    <string name="btn_store">Store</string>
+    <string name="btn_tasks">Tasks &amp; achievements</string>
+    <string name="btn_stats">Statistics</string>
+    <string name="btn_settings">Settings</string>
+    <string name="player_level">Player level %1$d</string>
+    <string name="coins_label">Coins</string>
+    <string name="xp_to_next">%1$d XP to next level</string>
+
+    <!-- Modes -->
+    <string name="modes_title">Game Modes</string>
+    <string name="best_score">Best: %1$s</string>
+    <string name="pick_duration">Pick duration</string>
+    <string name="pick_difficulty">Pick difficulty</string>
+    <string name="minutes_fmt">%1$d min</string>
+    <string name="level_fmt">Level %1$d</string>
+    <string name="locked">Locked</string>
+    <string name="challenges_title">Challenges</string>
+    <string name="puzzles_title">Puzzles</string>
+    <string name="adventure_title">Adventure</string>
+    <string name="completed">Completed</string>
+    <string name="stage_fmt">Stage %1$d</string>
+    <string name="puzzle_fmt">Puzzle %1$d</string>
+    <string name="pieces_left">Pieces left: %1$d</string>
+
+    <!-- HUD -->
+    <string name="hud_score">Score</string>
+    <string name="hud_level">Level</string>
+    <string name="hud_lines">Lines</string>
+    <string name="hud_time">Time</string>
+    <string name="hud_next">Next</string>
+    <string name="hud_hold">Hold</string>
+    <string name="hud_goal">Goal</string>
+    <string name="hud_combo">Combo ×%1$d</string>
+    <string name="hud_tetris">TETRIS!</string>
+    <string name="hud_tspin">T-SPIN!</string>
+    <string name="hud_back_to_back">Back-to-Back!</string>
+    <string name="hud_perfect">PERFECT CLEAR!</string>
+    <string name="hud_new_record">NEW RECORD!</string>
+    <string name="hud_level_up">Level %1$d</string>
+
+    <!-- Game over / summary -->
+    <string name="summary_game_over">Game Over</string>
+    <string name="summary_round_complete">Round Complete!</string>
+    <string name="summary_time_up">Time\'s Up!</string>
+    <string name="summary_retry">Play again</string>
+    <string name="summary_home">Home</string>
+    <string name="summary_next_stage">Next stage</string>
+    <string name="summary_challenge_done">Challenge completed!</string>
+    <string name="summary_challenge_failed">Challenge failed — try again</string>
+    <string name="summary_puzzle_done">Puzzle solved!</string>
+    <string name="summary_rewards">Rewards</string>
+    <string name="summary_coins_fmt">+%1$d coins</string>
+    <string name="summary_xp_fmt">+%1$d XP</string>
+    <string name="summary_level_up_fmt">Level up! Now level %1$d</string>
+    <string name="summary_best_fmt">Best: %1$d</string>
+
+    <!-- Pause -->
+    <string name="pause_title">Paused</string>
+    <string name="pause_resume">Resume</string>
+    <string name="pause_restart">Restart</string>
+    <string name="pause_home">Quit to home</string>
+
+    <!-- Store -->
+    <string name="store_title">Store</string>
+    <string name="store_tab_themes">Themes</string>
+    <string name="store_tab_blocks">Blocks</string>
+    <string name="store_tab_effects">Effects</string>
+    <string name="store_tab_sounds">Sounds</string>
+    <string name="store_owned">Owned</string>
+    <string name="store_free">Free</string>
+    <string name="store_buy">Buy</string>
+    <string name="store_select">Select</string>
+    <string name="store_selected">Selected</string>
+    <string name="store_confirm_buy">Confirm purchase</string>
+    <string name="store_confirm_buy_msg">Buy %1$s for %2$d coins?</string>
+    <string name="store_not_enough">Not enough coins</string>
+    <string name="store_already_owned">Already owned</string>
+    <string name="store_purchased">Purchased!</string>
+    <string name="store_default_theme">Reset to default theme</string>
+
+    <!-- Achievements / tasks -->
+    <string name="achievements_title">Achievements</string>
+    <string name="daily_tasks_title">Daily tasks</string>
+    <string name="tab_achievements">Achievements</string>
+    <string name="tab_daily">Daily</string>
+    <string name="claim">Claim</string>
+    <string name="claimed">Claimed</string>
+    <string name="reward_fmt">+%1$d coins</string>
+    <string name="progress_fmt">%1$d / %2$d</string>
+    <string name="unlocked_at">Unlocked</string>
+
+    <!-- Stats -->
+    <string name="stats_title">Statistics</string>
+    <string name="stat_rounds">Rounds played</string>
+    <string name="stat_lines">Lines cleared</string>
+    <string name="stat_score">Total score</string>
+    <string name="stat_tetrises">Tetrises</string>
+    <string name="stat_max_combo">Max combo</string>
+    <string name="stat_max_level">Max level</string>
+    <string name="stat_time">Total play time</string>
+    <string name="stat_hard_drops">Hard drops</string>
+    <string name="stat_by_mode">Best scores by mode</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="lang_system">System</string>
+    <string name="lang_arabic">Arabic</string>
+    <string name="lang_english">English</string>
+    <string name="settings_sfx">Sound effects</string>
+    <string name="settings_sfx_volume">SFX volume</string>
+    <string name="settings_music">Music</string>
+    <string name="settings_music_volume">Music volume</string>
+    <string name="settings_haptics">Vibration on key events</string>
+    <string name="settings_reduced_motion">Reduced motion &amp; effects</string>
+    <string name="settings_theme_hint">Theme selection lives in the Store</string>
+    <string name="settings_reset">Reset all progress</string>
+    <string name="settings_reset_confirm">This permanently deletes scores, coins, XP, achievements and purchases. Continue?</string>
+    <string name="settings_reset_done">Progress reset</string>
+    <string name="settings_about">About</string>
+    <string name="about_text">Tetris New Generation | تيتريس الجيل الجديد — an original offline falling-blocks puzzle game. Unofficial fan-made project; not affiliated with or endorsed by The Tetris Company.</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="ok">OK</string>
+    <string name="close">Close</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+
+    <!-- Audio toggle chips in game -->
+    <string name="chip_music">Music</string>
+    <string name="chip_sfx">SFX</string>
+</resources>
