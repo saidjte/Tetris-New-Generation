@@ -118,6 +118,15 @@ Release signing: define `TNG_KEYSTORE`, `TNG_KEYSTORE_PASSWORD`, `TNG_KEY_ALIAS`
 
 To publish a new version: `git tag v1.0.1 && git push origin v1.0.1`.
 
+## 📚 Project documentation / وثائق المشروع
+
+| Doc / الوثيقة | Purpose / الغرض |
+|---|---|
+| [docs/PLAN.md](docs/PLAN.md) | Detailed completion plan with honesty charter & audit baseline / خطة الإتمام وميثاق الأمانة |
+| [docs/AUDIT.md](docs/AUDIT.md) | Evidence-frozen audit log incl. clean-env re-verification & APK inspection / سجل التدقيق بالأدلة |
+| [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md) | Final report: 12 acceptance criteria × evidence + install guide / التقرير النهائي ومصفوفة القبول |
+| [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md) | 10-item on-device QA checklist / قائمة ضبط الجودة على جهازك |
+
 ## 🧪 Tests / الاختبارات
 
 47 JVM unit tests cover: piece shapes & rotations (SRS + O-piece stability + wall kicks), collision & bounds, line clearing, scoring values (level multiplier, back-to-back, combos, perfect clear), gravity curve, hold semantics, hard/soft drop scoring, ghost piece, top-out/game-over, time-limit win, goal completion, puzzle configs, pause/resume, save/restore round-trip (serialization), store purchases (single debit, duplicate rejection, insufficient funds, free grants) and XP progression.
