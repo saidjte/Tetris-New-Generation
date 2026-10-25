@@ -6,7 +6,7 @@
 
 مشروع مشجّعين غير رسمي مستوحى من أسلوب اللعب الكلاسيكي — غير مرتبط بشركة The Tetris Company ولا معتمد منها. جميع الشيفرة والأصول (الأصوات، الموسيقى، الأيقونات) **أصلية ومولّدة خصيصًا لهذا المشروع**.
 
-[![Android CI](https://github.com/OWNER/Tetris-New-Generation/actions/workflows/android.yml/badge.svg)](https://github.com/OWNER/Tetris-New-Generation/actions/workflows/android.yml)
+[![Android CI](https://github.com/saidjte/Tetris-New-Generation/actions/workflows/android.yml/badge.svg)](https://github.com/saidjte/Tetris-New-Generation/actions/workflows/android.yml)
 
 </div>
 
