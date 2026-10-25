@@ -97,6 +97,7 @@ fun GameScreen(
     hapticsEnabled: Boolean,
     gestureControls: Boolean,
     effectPackId: String,
+    blockPackId: String,
     onHome: () -> Unit
 ) {
     val context = LocalContext.current
@@ -116,6 +117,9 @@ fun GameScreen(
 
     // v1.3.0 presentation FX state
     val fxPack = remember(effectPackId) { PackDefs.effectPack(effectPackId) }
+    // v1.4.0: T99 sprite skin + real UI frames from the provided asset pack.
+    val t99 = remember(blockPackId) { blockPackId == "blocks_t99" }
+    val sprites = if (t99) com.tetrisnewgeneration.game.ui.components.rememberT99Sprites() else null
     val rowFlashes = remember { mutableStateListOf<RowFlash>() }
     val scorePopups = remember { mutableStateListOf<ScorePopup>() }
     val shockwaves = remember { mutableStateListOf<ShockwaveFx>() }
@@ -371,7 +375,7 @@ fun GameScreen(
                     modifier = Modifier.width(64.dp)
                 ) {
                     Text(stringResource(R.string.hud_hold), color = theme.textPrimary, fontSize = 11.sp)
-                    HoldBox(theme, ui.holdType, ui.canHold)
+                    HoldBox(theme, ui.holdType, ui.canHold, t99 = t99)
                     Spacer(Modifier.height(8.dp))
                     if (ui.combo > 0) {
                         Text(
@@ -400,6 +404,17 @@ fun GameScreen(
                         translationY = shakeY
                     }
                 ) {
+                    if (t99) {
+                        // v1.4.0: real board frame stretched behind the canvas.
+                        androidx.compose.foundation.Image(
+                            painter = androidx.compose.ui.res.painterResource(
+                                com.tetrisnewgeneration.game.R.drawable.t99_border
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.FillBounds
+                        )
+                    }
                     BoardCanvas(
                         theme = theme,
                         boardGrid = ui.board,
@@ -413,6 +428,7 @@ fun GameScreen(
                         scorePopups = scorePopups,
                         shockwaves = shockwaves,
                         comboHeat = FxMath.comboHeat(ui.combo),
+                        blockSprites = sprites,
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
@@ -425,7 +441,24 @@ fun GameScreen(
                 ) {
                     Text(stringResource(R.string.hud_next), color = theme.textPrimary, fontSize = 11.sp)
                     ui.nextQueue.take(3).forEach { idx ->
-                        MiniPiece(theme = theme, typeIndex = idx, cellSize = 9.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(width = 44.dp, height = 26.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (t99) {
+                                androidx.compose.foundation.Image(
+                                    painter = androidx.compose.ui.res.painterResource(
+                                        com.tetrisnewgeneration.game.R.drawable.t99_next
+                                    ),
+                                    contentDescription = null,
+                                    modifier = Modifier.matchParentSize(),
+                                    contentScale = androidx.compose.ui.layout.ContentScale.FillBounds
+                                )
+                            }
+                            MiniPiece(theme = theme, typeIndex = idx, cellSize = 7.dp, sprites = sprites)
+                        }
                         Spacer(Modifier.height(4.dp))
                     }
                 }

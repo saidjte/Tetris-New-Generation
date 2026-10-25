@@ -4,7 +4,7 @@
 
 لعبة ألغاز أصلية للقطع المتساقطة لهواتف **Android**، مبنية بالكامل بلغة **Kotlin** و**Jetpack Compose**، وتعمل **دون إنترنت 100%** بعد التثبيت.
 
-مشروع مشجّعين غير رسمي مستوحى من أسلوب اللعب الكلاسيكي — غير مرتبط بشركة The Tetris Company ولا معتمد منها. جميع الشيفرة والأصول (الأصوات، الموسيقى، الأيقونات) **أصلية ومولّدة خصيصًا لهذا المشروع**.
+مشروع مشجّعين غير رسمي مستوحى من أسلوب اللعب الكلاسيكي — غير مرتبط بشركة The Tetris Company ولا معتمد منها. الشيفرة مكتوبة خصيصًا لهذا المشروع، والأصول الصوتية والبصرية في v1.4.0 (صوت المعلّق، حزمة T99، الموسيقى، الرسومات، الخطوط) مقدّمة من مالك المشروع لأغراض ترفيهية شخصية غير تجارية (انظر `docs/ASSET_CREDITS.md`).
 
 [![Android CI](https://github.com/saidjte/Tetris-New-Generation/actions/workflows/android.yml/badge.svg)](https://github.com/saidjte/Tetris-New-Generation/actions/workflows/android.yml)
 
@@ -12,13 +12,13 @@
 
 ---
 
-**Tetris New Generation** is an original falling-blocks puzzle game for **Android**, built entirely with **Kotlin** and **Jetpack Compose**, and works **100% offline** after installation. An unofficial fan-made project — not affiliated with or endorsed by The Tetris Company. All code and assets (sounds, music, icons) are **original content created for this project**.
+**Tetris New Generation** is an original falling-blocks puzzle game for **Android**, built entirely with **Kotlin** and **Jetpack Compose**, and works **100% offline** after installation. An unofficial fan-made project — not affiliated with or endorsed by The Tetris Company. The code is written for this project; the v1.4.0 audio/visual assets (announcer voice, T99 pack, music, sprites, fonts) were provided by the project owner for personal, non-commercial entertainment (see `docs/ASSET_CREDITS.md`).
 
 ## ⬇️ Download / التحميل
 
 Grab the latest installable APK from **[GitHub Releases](../../releases)**:
 
-1. Open the [Releases page](../../releases) and download the APK from the **latest release** (currently v1.3.0).
+1. Open the [Releases page](../../releases) and download the APK from the **latest release** (currently v1.4.0).
 2. On your Android phone, open the file and allow *Install unknown apps* for your browser/file manager if asked.
 3. Install and play — no account, no internet, no ads.
 
@@ -47,9 +47,11 @@ You can also build it yourself (see below) or download the APK artifact from any
 - **Guideline-style engine** in pure Kotlin: SRS rotation with wall kicks, 7-bag randomizer, hold, ghost piece, 5-piece preview, lock delay with reset cap, T-spin detection with **full vs mini distinction**, back-to-back, combos, perfect clears, guideline speed curve and scoring.
 - **Animated color-coded event banners** for Tetris / T-Spin / Mini T-Spin / Back-to-Back / Perfect Clear / Combo / Level-up (AR/EN) — spring pop-in, gentle pulse, per-event colors and durations, haptic confirmation.
 - **Juicy presentation FX (v1.3.0)** — cleared rows burn away with white-hot beams, floating "+points" popups, screen shake scaled to the moment (hard drop / T-spin / Tetris / perfect clear), shockwave rings, a combo-heat glow on the board frame, breathing ghost piece, and a 3·2·1·GO! countdown with sound before every fresh round.
-- **Local store** — 13 visual themes (Neon Cyber, Galaxy, Aurora, Minimal, Retro Arcade, Crystal, Lava, Ocean, Monochrome, Golden, Nature, Pixel Art + default), 5 block packs, 5 effect packs (each with a distinct particle look: sparks, burst, trail, shatter, confetti) and 4 sound packs. Bought with locally earned coins; atomic purchase logic can never double-charge. Catalog lives in `assets/store.json` (prices editable without code changes).
+- **Real announcer + real audio (v1.4.0)** — a live commentator (275 real voice clips from the owner-provided pack) reacts to everything: clears 1–3, Tetris, T-spins, perfect clears, back-to-back, combos, level-ups, danger & relief, score/lines milestones (10K→1M / 25→200 lines), "finish line in sight", time warnings, pause/resume, idle nudges, records, wins and game-over — with random variants so lines never repeat verbatim, plus a settings toggle & volume. Music is now the provided real tracks (menu theme + in-game Type A, switching to the intense Type B at level 8), and a fifth SFX pack **T99 Sounds** (22 real arcade recordings) with a distinct sound per clear tier and T-spin tier. 13 interface click-sounds (toggles, tabs, dialogs, game launch) complete the coat of paint.
+- **T99 visual skin + game typography (v1.4.0)** — purchasable "T99 Look" block pack renders real sprites with per-piece colors, plus the real board frame and Hold/Next panel frames from the provided asset pack; new Orbitron (digits/score) + Changa (headings) + Cairo (body) font set gives the whole UI a game-grade look; new launcher icon.
+- **Local store** — 13 visual themes (Neon Cyber, Galaxy, Aurora, Minimal, Retro Arcade, Crystal, Lava, Ocean, Monochrome, Golden, Nature, Pixel Art + default), 6 block packs, 5 effect packs (each with a distinct particle look: sparks, burst, trail, shatter, confetti) and 5 sound packs. Bought with locally earned coins; atomic purchase logic can never double-charge. Catalog lives in `assets/store.json` (prices editable without code changes).
 - **Progression** — XP/levels, coins, 16 permanent achievements, 3 rotating daily tasks, per-mode best scores, lifetime statistics and a post-round summary with rewards.
-- **Audio** — 4 procedurally generated SFX packs (15 events each, layered synthesis: sub-octave + detune + shimmer sweeps) + 3 original music loops (menu / play / zen), separate volume controls, auto-pause on background. All files are local WAVs created by `scripts/gen_audio.py` (63 files total; no licensing risk, no downloads).
+- **Audio** — 4 procedurally generated SFX packs (15 events each, layered synthesis: sub-octave + detune + shimmer sweeps) **plus the v1.4.0 real-asset layer**: the T99 sound pack (22 arcade recordings), the 275-clip announcer, 13 UI click-sounds and the provided real music tracks (menu / Type A / Type B; zen keeps its calm loop). Separate volume controls for SFX, announcer and music, auto-pause on background. All files are bundled locally — nothing is streamed or downloaded.
 - **Bilingual UI** — full Arabic + English with automatic **RTL/LTR** switching, per-app language setting.
 - **Comfort options** — dark themes, reduced-motion mode, haptics toggle, per-channel volumes, **optional full-screen touch gestures** (tap = rotate, swipe = move, slow drag down = soft drop, fast flick down = hard drop, swipe up = hold — every action haptic-confirmed) alongside the always-available button pad.
 - **First-run help + result sharing** — a bilingual "How to play" screen (shown once, always in the menu) and one-tap sharing of round results.
@@ -64,7 +66,7 @@ You can also build it yourself (see below) or download the APK artifact from any
 | Architecture | Single-activity, MVVM (`ViewModel` + `StateFlow`), manual DI container |
 | Async | Kotlin Coroutines |
 | Persistence | Room 2.6.1 (scores, stats, achievements, purchases, progress) + DataStore 1.1.1 (settings, wallet, session) |
-| Audio | SoundPool (SFX) + MediaPlayer (music loops) |
+| Audio | SoundPool (SFX + UI clicks) + MediaPlayer (music loops + announcer voices) |
 | Build | Gradle 8.9 + Kotlin DSL, AGP 8.5.2, version catalog |
 | CI | GitHub Actions (tests + debug APK always, release APK + GitHub Release on `v*` tags) |
 

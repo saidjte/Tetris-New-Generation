@@ -14,6 +14,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -97,6 +100,7 @@ fun BoardCanvas(
     scorePopups: List<ScorePopup> = emptyList(),
     shockwaves: List<ShockwaveFx> = emptyList(),
     comboHeat: Float = 0f,
+    blockSprites: Map<Int, ImageBitmap>? = null,
     modifier: Modifier = Modifier
 ) {
     val frameMs = rememberFrameTimeMs(!reducedMotion)
@@ -164,7 +168,7 @@ fun BoardCanvas(
                 if (v > 0) {
                     drawBlock(
                         offsetX + x * cell, offsetY + (y - 2) * cell, cell,
-                        pieceColors[v - 1], theme.blockStyle
+                        pieceColors[v - 1], theme.blockStyle, blockSprites?.get(v - 1)
                     )
                 }
             }
@@ -176,7 +180,7 @@ fun BoardCanvas(
             if (row < 0) continue
             drawBlock(
                 offsetX + ax * cell, offsetY + row * cell, cell,
-                pieceColors[at], theme.blockStyle
+                pieceColors[at], theme.blockStyle, blockSprites?.get(at)
             )
         }
 
@@ -338,10 +342,32 @@ fun BoardCanvas(
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBlock(
-    x: Float, y: Float, cell: Float, color: Color, style: BlockStyle
+    x: Float, y: Float, cell: Float, color: Color, style: BlockStyle,
+    sprite: ImageBitmap? = null
 ) {
     val pad = cell * 0.06f
     when (style) {
+        BlockStyle.T99 -> {
+            // v1.4.0: real 32x32 sprite per piece type (pixel-snapped draw).
+            if (sprite != null) {
+                val inset = (cell * 0.03f).toInt().coerceAtLeast(0)
+                val dst = (cell - inset * 2).toInt().coerceAtLeast(1)
+                drawImage(
+                    image = sprite,
+                    srcOffset = IntOffset.Zero,
+                    srcSize = IntSize(sprite.width, sprite.height),
+                    dstOffset = IntOffset(x.toInt() + inset, y.toInt() + inset),
+                    dstSize = IntSize(dst, dst)
+                )
+            } else {
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(x + pad, y + pad),
+                    size = Size(cell - pad * 2, cell - pad * 2),
+                    cornerRadius = CornerRadius(cell * 0.12f, cell * 0.12f)
+                )
+            }
+        }
         BlockStyle.GLOW -> {
             drawRoundRect(
                 color = color.copy(alpha = 0.25f),

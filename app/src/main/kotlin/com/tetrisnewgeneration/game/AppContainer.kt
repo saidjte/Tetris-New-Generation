@@ -3,6 +3,8 @@ package com.tetrisnewgeneration.game
 import android.content.Context
 import com.tetrisnewgeneration.game.audio.MusicEngine
 import com.tetrisnewgeneration.game.audio.SfxEngine
+import com.tetrisnewgeneration.game.audio.UiSounds
+import com.tetrisnewgeneration.game.audio.VoiceEngine
 import com.tetrisnewgeneration.game.data.db.AppDatabase
 import com.tetrisnewgeneration.game.data.repo.ProgressionRepository
 import com.tetrisnewgeneration.game.data.repo.ProgressRepository
@@ -45,4 +47,10 @@ class AppContainer(context: Context) {
 
     val sfx: SfxEngine by lazy { SfxEngine(appContext) }
     val music: MusicEngine by lazy { MusicEngine(appContext) }
+    val voice: VoiceEngine by lazy { VoiceEngine(appContext) }
+
+    init {
+        // UI click sounds are reachable from any composable without DI plumbing.
+        UiSounds.init(appContext)
+    }
 }

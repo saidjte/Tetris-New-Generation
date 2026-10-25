@@ -6,16 +6,25 @@ import android.media.SoundPool
 import com.tetrisnewgeneration.game.R
 
 /**
- * Local SFX playback. Sounds are WAV resources generated for this project
- * (res/raw), organized in selectable packs. No network is ever involved.
+ * Local SFX playback. Sounds are bundled resources (res/raw), organized in
+ * selectable packs. Packs ship different file sets: the v1.4.0 "T99" pack
+ * (real arcade recordings) has dedicated sounds for every clear tier,
+ * T-spin tiers, danger/relief and records, while the four synthesized packs
+ * only cover the base events — [fallback] bridges the gap so every pack
+ * keeps working without missing files.
  */
 class SfxEngine(private val context: Context) {
 
     enum class Sound {
-        MOVE, ROTATE, DROP, LOCK, CLEAR, COMBO, LEVEL_UP,
-        ACHIEVE, REWARD, UNLOCK, ROUND_OVER, WIN, CLICK,
-        COUNTDOWN, GO
+        MOVE, ROTATE, DROP, LOCK, CLEAR, CLEAR_DOUBLE, CLEAR_TRIPLE, TETRIS,
+        COMBO, LEVEL_UP, ACHIEVE, REWARD, UNLOCK, ROUND_OVER, WIN, CLICK,
+        COUNTDOWN, GO,
+        HOLD, TSPIN, TSPIN_DOUBLE, TSPIN_TRIPLE, DANGER, SAVE, RECORD
     }
+
+    private fun suffix(sound: Sound): String = SfxSoundMap.suffix(sound)
+
+    private fun fallback(sound: Sound): Sound? = SfxSoundMap.fallback(sound)
 
     private val pool: SoundPool = SoundPool.Builder()
         .setMaxStreams(6)
@@ -49,14 +58,20 @@ class SfxEngine(private val context: Context) {
     }
 
     private fun resolve(sound: Sound): Loaded? {
-        val key = "${packId}_${sound.name.lowercase()}"
-        loaded[key]?.let { return it }
-        val resId = context.resources.getIdentifier(key, "raw", context.packageName)
-        if (resId == 0) return null
-        val soundId = pool.load(context, resId, 1)
-        val entry = Loaded(soundId, resId)
-        loaded[key] = entry
-        return entry
+        var s: Sound? = sound
+        while (s != null) {
+            val key = "${packId}_${suffix(s)}"
+            loaded[key]?.let { return it }
+            val resId = context.resources.getIdentifier(key, "raw", context.packageName)
+            if (resId != 0) {
+                val soundId = pool.load(context, resId, 1)
+                val entry = Loaded(soundId, resId)
+                loaded[key] = entry
+                return entry
+            }
+            s = fallback(s)
+        }
+        return null
     }
 
     private fun releasePack() {

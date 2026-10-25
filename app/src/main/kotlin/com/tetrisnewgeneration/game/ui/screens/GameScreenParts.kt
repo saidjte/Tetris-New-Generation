@@ -57,6 +57,7 @@ import com.tetrisnewgeneration.game.themes.ThemeDef
 import com.tetrisnewgeneration.game.ui.components.MiniPiece
 import com.tetrisnewgeneration.game.ui.components.TngCard
 import com.tetrisnewgeneration.game.ui.components.localizedText
+import com.tetrisnewgeneration.game.ui.components.rememberT99Sprites
 import com.tetrisnewgeneration.game.ui.vm.GameViewModel
 import kotlinx.coroutines.delay
 import java.util.Locale
@@ -73,7 +74,14 @@ fun HudStat(label: String, value: String, theme: ThemeDef) {
             .background(Color.Transparent)
     ) {
         Text(label, color = theme.textPrimary.copy(alpha = 0.7f), fontSize = 9.sp)
-        Text(value, color = theme.textPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        // v1.4.0: futuristic Orbitron digits for every HUD number.
+        Text(
+            value,
+            color = theme.textPrimary,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            fontFamily = com.tetrisnewgeneration.game.ui.theme.TngFonts.orbitron
+        )
     }
 }
 
@@ -127,7 +135,8 @@ fun GoalProgress(ui: GameViewModel.UiState, theme: ThemeDef) {
 }
 
 @Composable
-fun HoldBox(theme: ThemeDef, typeIndex: Int?, canHold: Boolean) {
+fun HoldBox(theme: ThemeDef, typeIndex: Int?, canHold: Boolean, t99: Boolean = false) {
+    val sprites = if (t99) rememberT99Sprites() else null
     Box(
         modifier = Modifier
             .size(56.dp, 40.dp)
@@ -140,9 +149,23 @@ fun HoldBox(theme: ThemeDef, typeIndex: Int?, canHold: Boolean) {
             ),
         contentAlignment = Alignment.Center
     ) {
+        if (t99) {
+            // v1.4.0: real panel frame from the provided asset pack.
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(
+                    com.tetrisnewgeneration.game.R.drawable.t99_hold
+                ),
+                contentDescription = null,
+                modifier = Modifier.matchParentSize(),
+                contentScale = androidx.compose.ui.layout.ContentScale.FillBounds
+            )
+        }
         if (typeIndex != null) {
-            MiniPiece(theme = theme, typeIndex = typeIndex, cellSize = 8.dp,
-                alpha = if (canHold) 1f else 0.4f)
+            MiniPiece(
+                theme = theme, typeIndex = typeIndex, cellSize = 8.dp,
+                alpha = if (canHold) 1f else 0.4f,
+                sprites = sprites
+            )
         }
     }
 }

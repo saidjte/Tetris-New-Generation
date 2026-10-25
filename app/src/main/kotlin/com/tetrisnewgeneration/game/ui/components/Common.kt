@@ -67,7 +67,10 @@ fun PrimaryActionButton(
     onClick: () -> Unit
 ) {
     Button(
-        onClick = onClick,
+        onClick = {
+            com.tetrisnewgeneration.game.audio.UiSounds.activate()
+            onClick()
+        },
         enabled = enabled,
         modifier = modifier.fillMaxWidth().height(56.dp),
         shape = RoundedCornerShape(16.dp),
@@ -96,7 +99,10 @@ fun MenuButtonRow(
             .clip(shape)
             .background(theme.surface.copy(alpha = 0.9f))
             .border(1.dp, theme.boardBorder.copy(alpha = 0.45f), shape)
-            .clickable { onClick() }
+            .clickable {
+                com.tetrisnewgeneration.game.audio.UiSounds.activate()
+                onClick()
+            }
             .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween

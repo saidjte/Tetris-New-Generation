@@ -68,6 +68,9 @@ fun StoreScreen(
     var toast by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) { vm.load() }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose { com.tetrisnewgeneration.game.audio.UiSounds.back() }
+    }
 
     val categories = listOf(Category.THEME, Category.BLOCK_PACK, Category.EFFECT_PACK, Category.SOUND_PACK)
     val filtered = items.filter { it.category == categories[tab] }
@@ -103,7 +106,10 @@ fun StoreScreen(
                 stringResource(R.string.store_tab_sounds)
             )
             labels.forEachIndexed { i, label ->
-                Tab(selected = tab == i, onClick = { tab = i },
+                Tab(selected = tab == i, onClick = {
+                    com.tetrisnewgeneration.game.audio.UiSounds.tab()
+                    tab = i
+                },
                     text = { Text(label, fontSize = 12.sp, color = theme.textPrimary) })
             }
         }
@@ -207,6 +213,7 @@ private fun soundPackNameAr(id: String) = when (id) {
     "sfx_arcade" -> "أصوات أركيد"
     "sfx_future" -> "أصوات مستقبلية"
     "sfx_calm" -> "أصوات هادئة"
+    "sfx_t99" -> "أصوات T99"
     else -> id
 }
 
@@ -215,6 +222,7 @@ private fun soundPackNameEn(id: String) = when (id) {
     "sfx_arcade" -> "Arcade Sounds"
     "sfx_future" -> "Future Sounds"
     "sfx_calm" -> "Calm Sounds"
+    "sfx_t99" -> "T99 Sounds"
     else -> id
 }
 

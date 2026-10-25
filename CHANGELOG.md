@@ -31,6 +31,31 @@
 - Release flow: bump `versionCode` + `versionName` → add a CHANGELOG entry → commit → `git tag vX.Y.Z && git push origin vX.Y.Z` → CI runs tests, builds, and publishes the release with the APK automatically.
 - CI guard: a tag not matching `versionName` fails the build with a clear error.
 
+## [1.4.0] — 2026-10-26
+
+### Added | إضافات
+- **«الأصول الحقيقية» — the real assets release.** The owner-provided packs (Google Drive) are now fully integrated: a live announcer, real music, an arcade SFX pack, interface sounds, a sprite skin and a game typography set (see `docs/DEV_PLAN_V1.4.0.md` + `docs/ASSET_CREDITS.md`).
+- **Announcer — معلّق صوتي حقيقي**: 275 real voice clips react to the game: clear 1/2/3, Tetris, T-spin, perfect clear, back-to-back, combos (2–8 & 10; **9 stays silent by design** — no real take exists), level-ups, danger + relief (stack-height hysteresis 15/13), score milestones 10K→1M, lines milestones 25→200 (sprint ladder 10/20/30/40 in short goal modes), "finish line in sight", 60/30-second warnings, hurry, time-up, records, wins, game over, pause/resume, zen calm every 90s, idle nudges (12s no input, 30s cooldown), warm-up on countdown, mode-flavored intros (zen/ultra/sprint). Random variant per event with no immediate repeat; big moments interrupt smaller ones; own settings toggle + volume (MediaPlayer on a background thread — zero decoded-PCM memory cost).
+- **Real music**: menu theme + in-game "Type A", auto-switching to the intense "Type B" at level 8. Zen keeps its calm loop.
+- **T99 Sounds — حزمة أصوات خامسة** (store, 150 coins): 22 real arcade recordings with a distinct sound per clear tier (clear/2/3, tetris) and T-spin tier (tspin/2/3) + hold/danger/relief/record. New engine events (HOLD, TSPIN tiers, CLEAR tiers, TETRIS, DANGER, SAVE, RECORD) fall back gracefully on the four synthesized packs via a pure, tested fallback chain.
+- **13 interface sounds** (Steam Deck set): buttons, toggles, tabs, modal open/close, game launch, back — following the global SFX switch.
+- **T99 Look — مظهر مرئي سادس** (store, 130 coins): real per-piece sprites (T=blue, Z=cyan, L=green, J=pink, I=purple, O=red, S=yellow) + the real board frame and Hold/Next panel frames from the asset pack, in the playfield and previews.
+- **Game typography**: Orbitron (score/timer digits — HUD), Changa (headings AR+EN), Cairo (body AR+EN) — full Material typography wired.
+- **New launcher icon** (all densities + adaptive + maskable).
+- **16 new unit tests** (voice catalog integrity 275-file mirror, combo silent-nine rule, milestone once-only + consume-on-jump, danger hysteresis, SFX suffix/fallback termination): **15 suites / 105 tests** total.
+
+### Changed | تغييرات
+- Music: `music_menu`/`music_play` are now the provided MP3 tracks (the synthesized WAVs retired; zen loop untouched).
+- `PieceHeld` now plays a dedicated HOLD sound (T99) instead of the UI click.
+- APK grows to ~29MB (all audio bundled locally — still no INTERNET permission, nothing streamed).
+- `versionCode` 5 → 6, `versionName` 1.3.0 → 1.4.0.
+
+### Updated docs | توثيق
+- `docs/DEV_PLAN_V1.4.0.md` (plan), `docs/ASSET_CREDITS.md` (attribution), README features/credits.
+
+### Not in this release | خارج هذا الإصدار (صدق كامل)
+- Image backgrounds as a theme, rotation-variant sprites, dynamic danger-layered music — mapped to v1.5.0.
+
 ## [1.3.0] — 2026-10-26
 
 ### Added | إضافات

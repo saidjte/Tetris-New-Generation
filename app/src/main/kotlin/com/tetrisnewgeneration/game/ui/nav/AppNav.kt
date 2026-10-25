@@ -1,5 +1,6 @@
 package com.tetrisnewgeneration.game.ui.nav
 
+import com.tetrisnewgeneration.game.audio.UiSounds
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -117,12 +118,12 @@ fun AppNav(settings: PlayerSettings) {
                     }
                 },
                 onBack = { nav.popBackStack() },
-                onLaunchSimple = { nav.navigate(Routes.game(it)) },
-                onLaunchTimeAttack = { nav.navigate(Routes.game("ta_$it")) },
-                onLaunchSpeed = { nav.navigate(Routes.game("spd_$it")) },
-                onLaunchChallenge = { nav.navigate(Routes.game(it)) },
-                onLaunchPuzzle = { nav.navigate(Routes.game("puzzle_$it")) },
-                onLaunchAdventure = { nav.navigate(Routes.game("adv_$it")) }
+                onLaunchSimple = { UiSounds.launch(); nav.navigate(Routes.game(it)) },
+                onLaunchTimeAttack = { UiSounds.launch(); nav.navigate(Routes.game("ta_$it")) },
+                onLaunchSpeed = { UiSounds.launch(); nav.navigate(Routes.game("spd_$it")) },
+                onLaunchChallenge = { UiSounds.launch(); nav.navigate(Routes.game(it)) },
+                onLaunchPuzzle = { UiSounds.launch(); nav.navigate(Routes.game("puzzle_$it")) },
+                onLaunchAdventure = { UiSounds.launch(); nav.navigate(Routes.game("adv_$it")) }
             )
         }
 
@@ -136,6 +137,7 @@ fun AppNav(settings: PlayerSettings) {
                 hapticsEnabled = settings.hapticsEnabled,
                 gestureControls = settings.gestureControls,
                 effectPackId = settings.effectPackId,
+                blockPackId = settings.blockPackId,
                 onHome = {
                     SessionHolder.json = null
                     nav.popBackStack(Routes.HOME, inclusive = false)

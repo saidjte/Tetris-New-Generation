@@ -46,6 +46,7 @@ object StoreCatalog {
         StoreItem("blocks_outline", Category.BLOCK_PACK, 60),
         StoreItem("blocks_geo", Category.BLOCK_PACK, 60),
         StoreItem("blocks_contrast", Category.BLOCK_PACK, 90),
+        StoreItem("blocks_t99", Category.BLOCK_PACK, 130),
         // Effect packs
         StoreItem("fx_sparks", Category.EFFECT_PACK, 0, free = true),
         StoreItem("fx_burst", Category.EFFECT_PACK, 70),
@@ -56,7 +57,8 @@ object StoreCatalog {
         StoreItem("sfx_original", Category.SOUND_PACK, 0, free = true),
         StoreItem("sfx_arcade", Category.SOUND_PACK, 80),
         StoreItem("sfx_future", Category.SOUND_PACK, 90),
-        StoreItem("sfx_calm", Category.SOUND_PACK, 80)
+        StoreItem("sfx_calm", Category.SOUND_PACK, 80),
+        StoreItem("sfx_t99", Category.SOUND_PACK, 150)
     )
 
     fun fromJson(text: String): List<StoreItem>? = try {

@@ -3,7 +3,7 @@ package com.tetrisnewgeneration.game.themes
 import androidx.compose.ui.graphics.Color
 import com.tetrisnewgeneration.game.engine.PieceType
 
-enum class BlockStyle { STANDARD, GLOW, OUTLINE, GEO, CONTRAST, PIXEL }
+enum class BlockStyle { STANDARD, GLOW, OUTLINE, GEO, CONTRAST, PIXEL, T99 }
 enum class BackgroundFx { NONE, STARS, AURORA, PULSE, WAVES, EMBERS, SNOW }
 enum class ParticleStyle { SPARKS, BURST, TRAIL, SHATTER, CONFETTI }
 

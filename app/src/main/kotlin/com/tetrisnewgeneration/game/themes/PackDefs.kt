@@ -27,7 +27,9 @@ object PackDefs {
         BlockPackDef("blocks_glow", "متوهج", "Glow", BlockStyle.GLOW, glow = true),
         BlockPackDef("blocks_outline", "محدد", "Outline", BlockStyle.OUTLINE, glow = false),
         BlockPackDef("blocks_geo", "هندسي", "Geometric", BlockStyle.GEO, glow = false),
-        BlockPackDef("blocks_contrast", "تباين عالٍ", "High Contrast", BlockStyle.CONTRAST, glow = false)
+        BlockPackDef("blocks_contrast", "تباين عالٍ", "High Contrast", BlockStyle.CONTRAST, glow = false),
+        // v1.4.0: real sprite skin + board/panel frames from the provided asset pack.
+        BlockPackDef("blocks_t99", "مظهر T99", "T99 Look", BlockStyle.T99, glow = true)
     )
 
     val effectPacks: List<EffectPackDef> = listOf(

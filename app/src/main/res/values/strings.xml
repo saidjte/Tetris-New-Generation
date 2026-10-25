@@ -122,6 +122,7 @@
     <string name="settings_sfx_volume">SFX volume</string>
     <string name="settings_music">Music</string>
     <string name="settings_music_volume">Music volume</string>
+    <string name="settings_voices">Announcer voice</string>
     <string name="settings_haptics">Vibration on key events</string>
     <string name="settings_reduced_motion">Reduced motion &amp; effects</string>
     <string name="settings_theme_hint">Theme selection lives in the Store</string>

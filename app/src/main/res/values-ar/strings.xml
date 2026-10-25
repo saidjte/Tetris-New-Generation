@@ -122,6 +122,7 @@
     <string name="settings_sfx_volume">مستوى المؤثرات</string>
     <string name="settings_music">الموسيقى</string>
     <string name="settings_music_volume">مستوى الموسيقى</string>
+    <string name="settings_voices">صوت المعلّق</string>
     <string name="settings_haptics">الاهتزاز عند الأحداث المهمة</string>
     <string name="settings_reduced_motion">تقليل الحركة والمؤثرات</string>
     <string name="settings_theme_hint">اختيار الثيم من داخل المتجر</string>

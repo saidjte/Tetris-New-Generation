@@ -100,8 +100,8 @@ class StorePurchaseTest {
         val store = repo(FakePurchaseDao(), FakeWallet(0))
         val items = store.catalog()
         assertEquals(13, items.count { it.category == Category.THEME })
-        assertEquals(5, items.count { it.category == Category.BLOCK_PACK })
+        assertEquals(6, items.count { it.category == Category.BLOCK_PACK })
         assertEquals(5, items.count { it.category == Category.EFFECT_PACK })
-        assertEquals(4, items.count { it.category == Category.SOUND_PACK })
+        assertEquals(5, items.count { it.category == Category.SOUND_PACK })
     }
 }

@@ -45,6 +45,13 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     var confirmReset by remember { mutableStateOf(false) }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose { com.tetrisnewgeneration.game.audio.UiSounds.back() }
+    }
+    // v1.4.0: interface sounds — modal chime exactly when the dialog opens.
+    androidx.compose.runtime.LaunchedEffect(confirmReset) {
+        if (confirmReset) com.tetrisnewgeneration.game.audio.UiSounds.modalShow()
+    }
 
     Column(
         modifier = Modifier
@@ -95,6 +102,17 @@ fun SettingsScreen(
                 value = settings.sfxVolume,
                 onValueChange = { onChange { copy(sfxVolume = it) } },
                 enabled = settings.sfxEnabled,
+                modifier = Modifier.fillMaxWidth()
+            )
+            // v1.4.0: real announcer voice pack settings.
+            ToggleRow(
+                stringResource(R.string.settings_voices),
+                settings.voicesEnabled, theme
+            ) { onChange { copy(voicesEnabled = it) } }
+            Slider(
+                value = settings.voicesVolume,
+                onValueChange = { onChange { copy(voicesVolume = it) } },
+                enabled = settings.voicesEnabled,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -159,7 +177,7 @@ fun SettingsScreen(
         Spacer(Modifier.height(20.dp))
     }
 
-    if (confirmReset) {
+        if (confirmReset) {
         ConfirmDialog(
             title = stringResource(R.string.settings_reset),
             message = stringResource(R.string.settings_reset_confirm),
@@ -210,7 +228,10 @@ private fun ToggleRow(label: String, value: Boolean, theme: ThemeDef, onChange: 
         Text(label, color = theme.textPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
         Switch(
             checked = value,
-            onCheckedChange = onChange,
+            onCheckedChange = {
+                com.tetrisnewgeneration.game.audio.UiSounds.toggle(it)
+                onChange(it)
+            },
             colors = SwitchDefaults.colors(
                 checkedTrackColor = theme.accent,
                 checkedThumbColor = androidx.compose.ui.graphics.Color(0xFF0B0E1A)

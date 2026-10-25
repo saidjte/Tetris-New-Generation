@@ -21,6 +21,8 @@ data class PlayerSettings(
     val language: String = "system",   // "system" | "en" | "ar"
     val sfxEnabled: Boolean = true,
     val sfxVolume: Float = 0.8f,
+    val voicesEnabled: Boolean = true,    // announcer (v1.4.0)
+    val voicesVolume: Float = 0.9f,
     val musicEnabled: Boolean = true,
     val musicVolume: Float = 0.5f,
     val hapticsEnabled: Boolean = true,
@@ -53,6 +55,8 @@ class SettingsStore(private val context: Context) : WalletStore {
         val LANGUAGE = stringPreferencesKey("language")
         val SFX_ENABLED = booleanPreferencesKey("sfx_enabled")
         val SFX_VOLUME = floatPreferencesKey("sfx_volume")
+        val VOICES_ENABLED = booleanPreferencesKey("voices_enabled")
+        val VOICES_VOLUME = floatPreferencesKey("voices_volume")
         val MUSIC_ENABLED = booleanPreferencesKey("music_enabled")
         val MUSIC_VOLUME = floatPreferencesKey("music_volume")
         val HAPTICS = booleanPreferencesKey("haptics")
@@ -74,6 +78,8 @@ class SettingsStore(private val context: Context) : WalletStore {
             language = p[Keys.LANGUAGE] ?: "system",
             sfxEnabled = p[Keys.SFX_ENABLED] ?: true,
             sfxVolume = p[Keys.SFX_VOLUME] ?: 0.8f,
+            voicesEnabled = p[Keys.VOICES_ENABLED] ?: true,
+            voicesVolume = p[Keys.VOICES_VOLUME] ?: 0.9f,
             musicEnabled = p[Keys.MUSIC_ENABLED] ?: true,
             musicVolume = p[Keys.MUSIC_VOLUME] ?: 0.5f,
             hapticsEnabled = p[Keys.HAPTICS] ?: true,
@@ -95,6 +101,8 @@ class SettingsStore(private val context: Context) : WalletStore {
     suspend fun setLanguage(value: String) = edit { it[Keys.LANGUAGE] = value }
     suspend fun setSfxEnabled(value: Boolean) = edit { it[Keys.SFX_ENABLED] = value }
     suspend fun setSfxVolume(value: Float) = edit { it[Keys.SFX_VOLUME] = value }
+    suspend fun setVoicesEnabled(value: Boolean) = edit { it[Keys.VOICES_ENABLED] = value }
+    suspend fun setVoicesVolume(value: Float) = edit { it[Keys.VOICES_VOLUME] = value }
     suspend fun setMusicEnabled(value: Boolean) = edit { it[Keys.MUSIC_ENABLED] = value }
     suspend fun setMusicVolume(value: Float) = edit { it[Keys.MUSIC_VOLUME] = value }
     suspend fun setHaptics(value: Boolean) = edit { it[Keys.HAPTICS] = value }
@@ -123,6 +131,8 @@ class SettingsStore(private val context: Context) : WalletStore {
         it[Keys.LANGUAGE] = s.language
         it[Keys.SFX_ENABLED] = s.sfxEnabled
         it[Keys.SFX_VOLUME] = s.sfxVolume
+        it[Keys.VOICES_ENABLED] = s.voicesEnabled
+        it[Keys.VOICES_VOLUME] = s.voicesVolume
         it[Keys.MUSIC_ENABLED] = s.musicEnabled
         it[Keys.MUSIC_VOLUME] = s.musicVolume
         it[Keys.HAPTICS] = s.hapticsEnabled

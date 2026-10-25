@@ -6,16 +6,15 @@ import android.media.MediaPlayer
 import com.tetrisnewgeneration.game.R
 
 /**
- * Looping background music from local resources. Tracks:
- *  - music_menu  (calm, menus)
- *  - music_play  (energetic, standard play)
- *  - music_zen   (very calm, Zen mode)
- * Playback pauses automatically when the app goes to background (caller wires
- * lifecycle), volume follows the player's settings, and nothing is streamed.
+ * Looping background music from local resources (v1.4.0: real tracks
+ * provided by the game owner — menu theme, in-game "Type A" and the more
+ * intense "Type B"; Zen keeps its calm synthesized loop). Playback pauses
+ * automatically when the app goes to background (caller wires lifecycle),
+ * volume follows the player's settings, and nothing is streamed.
  */
 class MusicEngine(private val context: Context) {
 
-    enum class Track { MENU, PLAY, ZEN }
+    enum class Track { MENU, PLAY, PLAY_INTENSE, ZEN }
 
     private var player: MediaPlayer? = null
     private var current: Track? = null
@@ -36,6 +35,7 @@ class MusicEngine(private val context: Context) {
         val resId = when (track) {
             Track.MENU -> R.raw.music_menu
             Track.PLAY -> R.raw.music_play
+            Track.PLAY_INTENSE -> R.raw.music_play_intense
             Track.ZEN -> R.raw.music_zen
         }
         player = MediaPlayer.create(context, resId)?.apply {
