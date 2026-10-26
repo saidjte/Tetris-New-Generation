@@ -134,6 +134,32 @@ fun SettingsScreen(
             ) { onChange { copy(reducedMotion = it) } }
         }
 
+        // v1.5.0 (V8/V1): effects intensity + image backgrounds
+        SectionTitle(stringResource(R.string.settings_fx_intensity), theme)
+        TngCard(theme, modifier = Modifier.fillMaxWidth()) {
+            Row {
+                FxChip("low", stringResource(R.string.fx_low),
+                    settings.effectsIntensity == "low", theme) {
+                    onChange { copy(effectsIntensity = "low") }
+                }
+                Spacer(Modifier.weight(1f))
+                FxChip("medium", stringResource(R.string.fx_medium),
+                    settings.effectsIntensity == "medium", theme) {
+                    onChange { copy(effectsIntensity = "medium") }
+                }
+                Spacer(Modifier.weight(1f))
+                FxChip("high", stringResource(R.string.fx_high),
+                    settings.effectsIntensity == "high", theme) {
+                    onChange { copy(effectsIntensity = "high") }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            ToggleRow(
+                stringResource(R.string.settings_image_backgrounds),
+                settings.imageBackgrounds, theme
+            ) { onChange { copy(imageBackgrounds = it) } }
+        }
+
         // Reset
         SectionTitle(stringResource(R.string.settings_reset), theme)
         Box(
@@ -217,6 +243,18 @@ private fun LanguageChip(
             fontSize = 13.sp
         )
     }
+}
+
+/** v1.5.0 (V8): effects-intensity selector chip (same look as language chips). */
+@Composable
+private fun FxChip(
+    value: String,
+    label: String,
+    selected: Boolean,
+    theme: ThemeDef,
+    onClick: () -> Unit
+) {
+    LanguageChip(value, label, selected, theme, onClick)
 }
 
 @Composable

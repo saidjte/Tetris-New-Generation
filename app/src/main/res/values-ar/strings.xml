@@ -147,4 +147,11 @@
     <!-- Audio toggle chips in game -->
     <string name="chip_music">الموسيقى</string>
     <string name="chip_sfx">المؤثرات</string>
+
+    <!-- v1.5.0 البهاء البصري -->
+    <string name="settings_fx_intensity">كثافة المؤثرات</string>
+    <string name="fx_low">منخفضة</string>
+    <string name="fx_medium">متوسطة</string>
+    <string name="fx_high">عالية</string>
+    <string name="settings_image_backgrounds">خلفيات مصورة ونجوم متحركة</string>
 </resources>

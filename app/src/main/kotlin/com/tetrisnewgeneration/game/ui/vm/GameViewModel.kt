@@ -20,6 +20,8 @@ import com.tetrisnewgeneration.game.engine.GameEvent
 import com.tetrisnewgeneration.game.engine.GameSave
 import com.tetrisnewgeneration.game.engine.TSpinKind
 import com.tetrisnewgeneration.game.modes.ModeConfig
+import com.tetrisnewgeneration.game.ui.fx.EffectsIntensity
+import com.tetrisnewgeneration.game.ui.fx.TrailSpec
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -79,7 +81,17 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         val clearPoints: Long = 0L,         // points of the last clear (popup)
         val shakeSeq: Int = 0,              // increments on every shake request
         val shakeAmpPx: Float = 0f,
-        val shakeDurationMs: Long = 0L
+        val shakeDurationMs: Long = 0L,
+        // v1.5.0 presentation plumbing (V2/V3/V4).
+        val activePieceX: Int? = null,      // piece-box origin for rotation sprites
+        val activePieceY: Int? = null,
+        val activeRotation: Int = 0,        // SRS rotation state of the active piece
+        val trailSeq: Int = 0,              // increments on every hard drop
+        val trailSpec: TrailSpec? = null,   // swept columns/rows of the last hard drop
+        val lockSeq: Int = 0,               // increments on every piece lock
+        val lockCells: List<Triple<Int, Int, Int>> = emptyList(), // locked piece cells
+        val dangerActive: Boolean = false,  // synced with the audio DangerTracker
+        val dangerRows: Int = 0             // current stack height in rows
     )
 
     enum class ToastKind { TETRIS, TSPIN, TSPIN_MINI, B2B, PERFECT, LEVEL_UP, RECORD, COMBO }
@@ -95,7 +107,11 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     private var lastSessionSaveMs = 0L
     private var clearCounter = 0
     private var shakeCounter = 0
+    private var trailCounter = 0
+    private var lockCounter = 0
     private var timeWarned = false
+    // v1.5.0 (V8): effects-intensity multiplier for shake amplitude.
+    private var fxFactor: Float = EffectsIntensity.factor(null)
 
     // v1.4.0 announcer state
     private var milestones: VoiceMilestones = VoiceMilestones.forMode(null)
@@ -108,11 +124,17 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     private var lastActionAt = 0L
     private var lastIdleVoiceAt = 0L
     private var lastZenCalmAt = 0L
+    // v1.5.0 (V3): pre-drop piece handed from the input drain to the event map.
+    private var pendingDrop: com.tetrisnewgeneration.game.engine.Piece? = null
+    // v1.5.0 (V4): last known danger state for buildUiState.
+    private var lastDangerActive = false
+    private var lastDangerRows = 0
 
     /** Called by the screen when entering; loads settings + best score. */
     fun prepare() {
         viewModelScope.launch {
             playerSettings = container.settings.current()
+            fxFactor = EffectsIntensity.factor(playerSettings.effectsIntensity)
             applyAudioSettings()
         }
     }
@@ -139,6 +161,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         lastZenCalmAt = System.currentTimeMillis()
         viewModelScope.launch {
             playerSettings = container.settings.current()
+            fxFactor = EffectsIntensity.factor(playerSettings.effectsIntensity)
             applyAudioSettings()
             _ui.value = buildUiState(eng, bestBefore = loadBest(config.id))
             if (autoStart) {
@@ -226,9 +249,13 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         while (kotlin.coroutines.coroutineContext.isActive &&
             eng.state == GameEngine.State.PLAYING
         ) {
+            // Piece position BEFORE the tick/action — v1.5.0 (V3) trail +
+            // impact dust are computed from the pre-drop/pre-lock geometry.
+            val prePiece = eng.piece
             // Drain queued inputs first for responsiveness.
             while (true) {
                 val action = actions.tryReceive().getOrNull() ?: break
+                if (action == GameAction.HardDrop) prePiece?.let { pendingDrop = it }
                 eng.perform(action)
                 if (action == GameAction.HardDrop) {
                     sfx.play(SfxEngine.Sound.DROP)
@@ -260,7 +287,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                     voice.play(VoiceEvent.ULTRA30)
                 }
             }
-            handleEvents(eng.drainEvents())
+            handleEvents(eng.drainEvents(), prePiece)
             uiAccum += dt
             if (uiAccum >= 16) {
                 uiAccum = 0
@@ -268,6 +295,10 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                 milestones.onScore(eng.score)?.let { voice.play(it) }
                 milestones.onLines(eng.lines)?.let { voice.play(it) }
                 danger.update(stackHeightRows(eng))?.let { voice.play(it) }
+                // v1.5.0 (V4): the visual danger state is read in the SAME
+                // tick as the voice event, so glow and audio flip together.
+                lastDangerActive = danger.active
+                lastDangerRows = stackHeightRows(eng)
                 val wall = System.currentTimeMillis()
                 if (eng.config.zenMode && wall - lastZenCalmAt >= ZEN_CALM_PERIOD_MS) {
                     lastZenCalmAt = wall
@@ -328,7 +359,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun handleEvents(events: List<GameEvent>) {
+    private fun handleEvents(events: List<GameEvent>, prePiece: com.tetrisnewgeneration.game.engine.Piece?) {
         for (event in events) {
             when (event) {
                 is GameEvent.PieceMoved -> sfx.play(SfxEngine.Sound.MOVE)
@@ -337,8 +368,34 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                 is GameEvent.HardDropped -> {
                     // C4: small impact shake for every hard drop.
                     if (event.rows > 0) pushShake(4f, 200L)
+                    // v1.5.0 (V3): fading vertical trail along the swept path.
+                    val drop = pendingDrop
+                    pendingDrop = null
+                    if (event.rows > 0 && drop != null) {
+                        val cells = drop.cells()
+                        val cols = cells.map { it.x }.distinct().sorted()
+                        val top = cells.minOf { it.y }
+                        val bottom = cells.maxOf { it.y }
+                        pushTrail(
+                            TrailSpec(
+                                cols = cols,
+                                fromRow = top,
+                                toRow = top + event.rows + (bottom - top),
+                                typeIdx = drop.type.ordinal
+                            )
+                        )
+                        droppedPiece = drop.moved(0, event.rows)
+                    }
                 }
-                is GameEvent.PieceLocked -> sfx.play(SfxEngine.Sound.LOCK)
+                is GameEvent.PieceLocked -> {
+                    sfx.play(SfxEngine.Sound.LOCK)
+                    // v1.5.0 (V3): impact dust puff at the landing cells.
+                    val locked = droppedPiece ?: prePiece
+                    droppedPiece = null
+                    locked?.let { piece ->
+                        pushLock(piece.cells().map { Triple(it.x, it.y, piece.type.ordinal) })
+                    }
+                }
                 is GameEvent.PieceHeld -> sfx.play(SfxEngine.Sound.HOLD)
                 is GameEvent.LinesCleared -> {
                     // C2/C3: remember rows + points for the flash and popup FX.
@@ -440,9 +497,23 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         shakeCounter++
         _ui.value = _ui.value.copy(
             shakeSeq = shakeCounter,
-            shakeAmpPx = amplitudePx,
+            // v1.5.0 (V8): shake strength follows the effects-intensity setting.
+            shakeAmpPx = amplitudePx * fxFactor,
             shakeDurationMs = durationMs
         )
+    }
+
+    // v1.5.0 (V3): hard-drop trail + impact-dust plumbing.
+    private var droppedPiece: com.tetrisnewgeneration.game.engine.Piece? = null
+
+    private fun pushTrail(spec: TrailSpec) {
+        trailCounter++
+        _ui.value = _ui.value.copy(trailSeq = trailCounter, trailSpec = spec)
+    }
+
+    private fun pushLock(cells: List<Triple<Int, Int, Int>>) {
+        lockCounter++
+        _ui.value = _ui.value.copy(lockSeq = lockCounter, lockCells = cells)
     }
 
     private fun bumpStat(key: String, amount: Long) {
@@ -613,7 +684,16 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
             clearPoints = _ui.value.clearPoints,
             shakeSeq = _ui.value.shakeSeq,
             shakeAmpPx = _ui.value.shakeAmpPx,
-            shakeDurationMs = _ui.value.shakeDurationMs
+            shakeDurationMs = _ui.value.shakeDurationMs,
+            activePieceX = eng.piece?.x,
+            activePieceY = eng.piece?.y,
+            activeRotation = eng.piece?.rotation ?: 0,
+            trailSeq = _ui.value.trailSeq,
+            trailSpec = _ui.value.trailSpec,
+            lockSeq = _ui.value.lockSeq,
+            lockCells = _ui.value.lockCells,
+            dangerActive = lastDangerActive,
+            dangerRows = lastDangerRows
         )
     }
 

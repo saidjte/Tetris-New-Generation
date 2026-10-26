@@ -138,6 +138,9 @@ fun AppNav(settings: PlayerSettings) {
                 gestureControls = settings.gestureControls,
                 effectPackId = settings.effectPackId,
                 blockPackId = settings.blockPackId,
+                fxIntensity = com.tetrisnewgeneration.game.ui.fx.EffectsIntensity
+                    .factor(settings.effectsIntensity),
+                imageBackgrounds = settings.imageBackgrounds,
                 onHome = {
                     SessionHolder.json = null
                     nav.popBackStack(Routes.HOME, inclusive = false)

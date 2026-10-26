@@ -65,7 +65,16 @@ fun HomeScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(theme.backgroundTop)) {
-        HomeBackdrop(theme)
+        // v1.5.0 (V1): image backdrop layer; disabling it in settings brings
+        // back the original falling-block silhouettes exactly.
+        if (settings.imageBackgrounds) {
+            com.tetrisnewgeneration.game.ui.fx.BackdropLayer(
+                theme = theme,
+                reducedMotion = settings.reducedMotion
+            )
+        } else {
+            HomeBackdrop(theme)
+        }
 
         Column(
             modifier = Modifier

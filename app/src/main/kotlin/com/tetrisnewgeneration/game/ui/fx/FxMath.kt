@@ -111,4 +111,60 @@ object FxMath {
         val phase = (frameMs % GHOST_PERIOD_MS.toLong()) / GHOST_PERIOD_MS
         return 0.24f + 0.10f * sin(phase * 2f * PI.toFloat())
     }
+
+    // --------------------------------------- hard-drop trail (v1.5.0, V3)
+
+    /** How long the fading vertical hard-drop trail stays visible. */
+    const val TRAIL_DURATION_MS = 200f
+
+    /** Linear fade of the drop trail: fully bright at birth, gone at 200 ms. */
+    fun trailAlpha(progress: Float): Float = (1f - progress.coerceIn(0f, 1f))
+
+    // ------------------------------------------ danger pulse (v1.5.0, V4)
+
+    /**
+     * Visual danger intensity from the stack height. Mirrors the audio
+     * DangerTracker hysteresis window (audio enters at 15 rows); the glow
+     * then scales with how close the stack is to the top (20 rows).
+     */
+    const val DANGER_START_ROWS = 15
+    const val DANGER_MAX_ROWS = 20
+
+    fun dangerIntensity(stackHeightRows: Int): Float =
+        ((stackHeightRows - DANGER_START_ROWS).toFloat() /
+            (DANGER_MAX_ROWS - DANGER_START_ROWS)).coerceIn(0f, 1f)
+
+    /** One pulse cycle of the danger glow. Freezes to a constant 0.5 when the frame clock is frozen (reduced motion). */
+    const val DANGER_PULSE_PERIOD_MS = 800f
+
+    fun dangerPulse(frameMs: Long): Float {
+        val phase = (frameMs % DANGER_PULSE_PERIOD_MS.toLong()) / DANGER_PULSE_PERIOD_MS
+        return 0.5f + 0.5f * sin(phase * 2f * PI.toFloat())
+    }
+
+    // ------------------------------------------- impact dust (v1.5.0, V3)
+
+    /**
+     * Impact-dust particle budget for one piece lock: 6-10 particles at
+     * MEDIUM, scaled by the effects-intensity factor and clamped so LOW
+     * stays light and HIGH stays bounded.
+     */
+    fun dustCount(intensityFactor: Float): Int =
+        (8f * intensityFactor).toInt().coerceIn(3, 12)
 }
+
+/**
+ * v1.5.0 (V3): geometry of one hard-drop trail — the swept columns and the
+ * board rows the piece travelled through. Pure data so the ViewModel can
+ * compute it from the engine and the renderer can draw it.
+ *
+ * [cols] are board x columns occupied by the piece, [fromRow] the topmost
+ * pre-drop row of the piece, [toRow] the bottom row after landing (both in
+ * board coordinates including the 2 buffer rows).
+ */
+data class TrailSpec(
+    val cols: List<Int>,
+    val fromRow: Int,
+    val toRow: Int,
+    val typeIdx: Int
+)

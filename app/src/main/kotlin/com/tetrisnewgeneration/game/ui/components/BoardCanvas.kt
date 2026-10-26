@@ -68,6 +68,11 @@ class ShockwaveFx {
     var elapsedMs: Float = 0f
 }
 
+/** Fading vertical trail left by a hard drop (v1.5.0, V3). */
+class DropTrailFx(val spec: com.tetrisnewgeneration.game.ui.fx.TrailSpec) {
+    var elapsedMs: Float = 0f
+}
+
 /**
  * High-performance playfield renderer: grid, locked cells, ghost piece, active
  * piece, background FX, particles and flashes. One Canvas, no per-frame
@@ -101,12 +106,24 @@ fun BoardCanvas(
     shockwaves: List<ShockwaveFx> = emptyList(),
     comboHeat: Float = 0f,
     blockSprites: Map<Int, ImageBitmap>? = null,
+    rotationSprites: Map<Int, List<ImageBitmap>>? = null,
+    activePieceOrigin: Pair<Int, Int>? = null,
+    activeRotation: Int = 0,
+    dropTrails: List<DropTrailFx> = emptyList(),
+    dangerActive: Boolean = false,
+    dangerRows: Int = 0,
+    fxIntensity: Float = 1f,
     modifier: Modifier = Modifier
 ) {
     val frameMs = rememberFrameTimeMs(!reducedMotion)
     val pieceColors = remember(theme) {
         PieceType.entries.map { theme.colorOf(it) }
     }
+    // v1.5.0 (V2 fix): a sprite skin must actually render its sprites. The
+    // presence of block sprites implies the T99 skin, so cells use the T99
+    // draw path instead of the theme's flat style (v1.4.0 shipped the assets
+    // but the style flag never reached the board).
+    val effectiveStyle = if (blockSprites != null) BlockStyle.T99 else theme.blockStyle
 
     Canvas(modifier = modifier) {
         val cols = 10
@@ -168,20 +185,63 @@ fun BoardCanvas(
                 if (v > 0) {
                     drawBlock(
                         offsetX + x * cell, offsetY + (y - 2) * cell, cell,
-                        pieceColors[v - 1], theme.blockStyle, blockSprites?.get(v - 1)
+                        pieceColors[v - 1], effectiveStyle, blockSprites?.get(v - 1)
                     )
                 }
             }
         }
 
-        // Active piece
-        for ((ax, ay, at) in activeCells) {
-            val row = ay - 2
-            if (row < 0) continue
-            drawBlock(
-                offsetX + ax * cell, offsetY + row * cell, cell,
-                pieceColors[at], theme.blockStyle, blockSprites?.get(at)
+        // Active piece. v1.5.0 (V2): with the T99 skin the whole piece is
+        // drawn as the rotation-frame sprite matching the current SRS state,
+        // so the piece visibly turns instead of teleporting between shapes.
+        val rotSprite = rotationSprites
+            ?.get(activeCells.firstOrNull()?.third)
+            ?.getOrNull(activeRotation and 3)
+        if (rotSprite != null && activePieceOrigin != null && activeCells.isNotEmpty()) {
+            val (px, py) = activePieceOrigin
+            drawImage(
+                image = rotSprite,
+                srcOffset = IntOffset.Zero,
+                srcSize = IntSize(rotSprite.width, rotSprite.height),
+                dstOffset = IntOffset(
+                    (offsetX + px * cell).toInt(),
+                    (offsetY + py * cell).toInt()
+                ),
+                dstSize = IntSize(
+                    (rotSprite.width / 32f * cell).toInt().coerceAtLeast(1),
+                    (rotSprite.height / 32f * cell).toInt().coerceAtLeast(1)
+                )
             )
+        } else {
+            for ((ax, ay, at) in activeCells) {
+                val row = ay - 2
+                if (row < 0) continue
+                drawBlock(
+                    offsetX + ax * cell, offsetY + row * cell, cell,
+                    pieceColors[at], effectiveStyle, blockSprites?.get(at)
+                )
+            }
+        }
+
+        // Hard-drop trails (v1.5.0, V3): a fading column-wide band along the
+        // swept path, in the colour of the dropped piece.
+        for (trail in dropTrails) {
+            val progress = (trail.elapsedMs / FxMath.TRAIL_DURATION_MS).coerceIn(0f, 1f)
+            val alpha = FxMath.trailAlpha(progress) * 0.45f
+            if (alpha <= 0.01f) continue
+            val color = pieceColors.getOrElse(trail.spec.typeIdx) { Color.White }
+            val topRow = (trail.spec.fromRow - 2).coerceAtLeast(0)
+            val botRow = (trail.spec.toRow - 2).coerceAtMost(visibleRows - 1)
+            if (botRow < topRow) continue
+            for (col in trail.spec.cols) {
+                if (col < 0 || col >= cols) continue
+                drawRoundRect(
+                    color = color.copy(alpha = alpha),
+                    topLeft = Offset(offsetX + col * cell + cell * 0.12f, offsetY + topRow * cell),
+                    size = Size(cell * 0.76f, (botRow - topRow + 1) * cell),
+                    cornerRadius = CornerRadius(cell * 0.2f, cell * 0.2f)
+                )
+            }
         }
 
         // Particles — one draw path per effect-pack style (v1.3.0, C1).
@@ -272,7 +332,7 @@ fun BoardCanvas(
             val progress = (ring.elapsedMs / FxMath.RING_DURATION_MS).coerceIn(0f, 1f)
             val maxR = sqrt(boardW * boardW + boardH * boardH) / 2f * 0.65f
             drawCircle(
-                color = theme.accent.copy(alpha = FxMath.ringAlpha(progress)),
+                color = theme.accent.copy(alpha = FxMath.ringAlpha(progress) * fxIntensity.coerceIn(0.5f, 1.5f)),
                 radius = FxMath.ringRadius(progress, maxR),
                 center = Offset(offsetX + boardW / 2f, offsetY + boardH / 2f),
                 style = Stroke(width = 2f + (1f - progress) * cell * 0.35f)
@@ -312,21 +372,55 @@ fun BoardCanvas(
         }
 
         // Combo heat glow (v1.3.0, C6): the frame warms up with the chain.
+        // v1.5.0 (V8): glow strength scales with the effects-intensity setting.
         if (comboHeat > 0f) {
+            val glowScale = fxIntensity.coerceIn(0.5f, 1.5f)
             val glowColor = Color(0xFFFF8C1A)
             drawRoundRect(
-                color = glowColor.copy(alpha = 0.12f + 0.28f * comboHeat),
+                color = glowColor.copy(alpha = (0.12f + 0.28f * comboHeat) * glowScale),
                 topLeft = Offset(offsetX, offsetY),
                 size = Size(boardW, boardH),
                 cornerRadius = CornerRadius(8f, 8f),
                 style = Stroke(width = 3f + comboHeat * 5f)
             )
             drawRoundRect(
-                color = glowColor.copy(alpha = 0.05f + 0.12f * comboHeat),
+                color = glowColor.copy(alpha = (0.05f + 0.12f * comboHeat) * glowScale),
                 topLeft = Offset(offsetX - 3, offsetY - 3),
                 size = Size(boardW + 6, boardH + 6),
                 cornerRadius = CornerRadius(11f, 11f),
                 style = Stroke(width = 3f + comboHeat * 4f)
+            )
+        }
+
+        // Danger pulse (v1.5.0, V4): the board edge and the last free row
+        // glow red while the audio DangerTracker is in its danger window.
+        // Same state, same ViewModel tick — audio and visuals flip together.
+        if (dangerActive) {
+            val intensity = FxMath.dangerIntensity(dangerRows)
+            val pulse = FxMath.dangerPulse(frameMs) // frozen constant under reduced motion
+            val alpha = (0.20f + 0.42f * pulse) * (0.6f + 0.4f * intensity)
+            val red = Color(0xFFEF4444)
+            drawRoundRect(
+                color = red.copy(alpha = alpha),
+                topLeft = Offset(offsetX, offsetY),
+                size = Size(boardW, boardH),
+                cornerRadius = CornerRadius(8f, 8f),
+                style = Stroke(width = 3f + intensity * 4f + pulse * 2f)
+            )
+            drawRoundRect(
+                color = red.copy(alpha = alpha * 0.5f),
+                topLeft = Offset(offsetX - 3, offsetY - 3),
+                size = Size(boardW + 6, boardH + 6),
+                cornerRadius = CornerRadius(11f, 11f),
+                style = Stroke(width = 2f + intensity * 3f)
+            )
+            // The last free row just above the stack breathes with the pulse.
+            val freeRow = (visibleRows - dangerRows - 1).coerceIn(0, visibleRows - 1)
+            drawRoundRect(
+                color = red.copy(alpha = alpha * 0.30f),
+                topLeft = Offset(offsetX + 2, offsetY + freeRow * cell + 1),
+                size = Size(boardW - 4, cell - 2),
+                cornerRadius = CornerRadius(4f, 4f)
             )
         }
 

@@ -31,6 +31,25 @@
 - Release flow: bump `versionCode` + `versionName` → add a CHANGELOG entry → commit → `git tag vX.Y.Z && git push origin vX.Y.Z` → CI runs tests, builds, and publishes the release with the APK automatically.
 - CI guard: a tag not matching `versionName` fails the build with a clear error.
 
+## [1.5.0] — 2026-10-26
+
+### Added | إضافات
+- **«البهاء البصري» — the visual splendor release** (approved from the improvement-proposals document, items V1/V2/V3/V4/V6/V8, chapter 10 exit gates).
+- **V1 — Image backgrounds + parallax stars**: the three owner-provided backdrop images are now a full-screen layer behind the game and home screens, tinted toward each of the 13 themes, with a slow two-layer drifting starfield. A new "Image backgrounds" switch restores the plain gradient exactly when off (backdrop mapping is unit-tested for all 13 themes).
+- **V2 — Real rotation frames for the T99 skin**: all 28 full-piece sprites from the asset pack are integrated; each frame was verified cell-by-cell against the engine's SRS shapes (frame r+1 == rotation r, box-aligned), so the active piece visibly *turns* instead of teleporting. Includes the honest v1.4.0 fix: the sprite style flag now actually reaches the board cells (locked cells draw their real sprites too).
+- **V3 — Hard-drop trail & impact dust**: a fading column-wide trail along the swept path (200 ms, piece colour) plus a 6–10 particle dust puff at the landing cells, both fully disabled under reduced motion.
+- **V4 — Visual danger pulse**: while the audio DangerTracker is inside its 15/13 hysteresis window, the board edge and the last free row glow red, scaling with proximity to the top. The visual state is read in the same ViewModel tick as the DANGER/SAVED voice events — audio and visuals flip in the same logical frame (now unit-tested).
+- **V6 — Themed board frame**: the asset-pack frame is used for *every* theme (not only T99), tinted per theme so each theme stamps the board border; the Hold container glows with the theme accent while the swap is available, dims to a muted gray once consumed, and the first Next slot glows.
+- **V8 — Effects-intensity setting**: Low / Medium / High (×0.5 / ×1 / ×1.5) multiplies particle counts, shake amplitude and glow strength. Default Medium; integrates with (and is dominated by) reduced motion.
+- **16 new unit tests** (intensity parsing/clamps, trail curve, dust budget bounds, danger intensity/pulse/period, audio-visual danger sync, rotation-frame naming incl. wrap/clamp safety, 13-theme backdrop coverage): **16 suites / 121 tests** total.
+
+### Changed | تغييرات
+- Combo glow and shockwave ring brightness scale with the effects-intensity factor.
+- `versionCode` 6 → 7, `versionName` 1.4.0 → 1.5.0.
+
+### Not in this release | خارج هذا الإصدار (صدق كامل)
+- Audio track items (A1–A7 + V5) and gameplay/UX tracks — mapped to v1.6.0+ in the approved roadmap (docs: improvement-proposals chapters 8–10).
+
 ## [1.4.0] — 2026-10-26
 
 ### Added | إضافات

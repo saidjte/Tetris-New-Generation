@@ -69,6 +69,7 @@ import com.tetrisnewgeneration.game.themes.PackDefs
 import com.tetrisnewgeneration.game.themes.ParticleStyle
 import com.tetrisnewgeneration.game.themes.ThemeDef
 import com.tetrisnewgeneration.game.ui.components.BoardCanvas
+import com.tetrisnewgeneration.game.ui.components.DropTrailFx
 import com.tetrisnewgeneration.game.ui.components.MiniPiece
 import com.tetrisnewgeneration.game.ui.components.Particle
 import com.tetrisnewgeneration.game.ui.components.RowFlash
@@ -98,6 +99,8 @@ fun GameScreen(
     gestureControls: Boolean,
     effectPackId: String,
     blockPackId: String,
+    fxIntensity: Float,
+    imageBackgrounds: Boolean,
     onHome: () -> Unit
 ) {
     val context = LocalContext.current
@@ -120,9 +123,12 @@ fun GameScreen(
     // v1.4.0: T99 sprite skin + real UI frames from the provided asset pack.
     val t99 = remember(blockPackId) { blockPackId == "blocks_t99" }
     val sprites = if (t99) com.tetrisnewgeneration.game.ui.components.rememberT99Sprites() else null
+    // v1.5.0 (V2): real rotation frames for the active piece.
+    val rotSprites = if (t99) com.tetrisnewgeneration.game.ui.components.rememberT99RotationSprites() else null
     val rowFlashes = remember { mutableStateListOf<RowFlash>() }
     val scorePopups = remember { mutableStateListOf<ScorePopup>() }
     val shockwaves = remember { mutableStateListOf<ShockwaveFx>() }
+    val dropTrails = remember { mutableStateListOf<DropTrailFx>() }
     var shakeX by remember { mutableStateOf(0f) }
     var shakeY by remember { mutableStateOf(0f) }
     var shakeElapsed by remember { mutableStateOf(Float.MAX_VALUE) }
@@ -195,12 +201,12 @@ fun GameScreen(
         when (kind) {
             GameViewModel.ToastKind.TETRIS -> {
                 haptic(); flashColor = Color(0xFF22D3EE); flashAlpha = 0.45f
-                spawnBurst(particles, (fxPack.density * 1.2f).toInt(), Color(0xFF22D3EE), 10f, fxPack.particle)
+                spawnBurst(particles, (fxPack.density * fxIntensity * 1.2f).toInt(), Color(0xFF22D3EE), 10f, fxPack.particle)
                 shockwaves.add(ShockwaveFx())
             }
             GameViewModel.ToastKind.TSPIN -> {
                 haptic(); flashColor = Color(0xFFA855F7); flashAlpha = 0.38f
-                spawnBurst(particles, (fxPack.density * 0.9f).toInt(), Color(0xFFA855F7), 10f, fxPack.particle)
+                spawnBurst(particles, (fxPack.density * fxIntensity * 0.9f).toInt(), Color(0xFFA855F7), 10f, fxPack.particle)
             }
             GameViewModel.ToastKind.TSPIN_MINI -> {
                 hapticLight(); flashColor = Color(0xFFC084FC); flashAlpha = 0.28f
@@ -210,7 +216,7 @@ fun GameScreen(
             }
             GameViewModel.ToastKind.PERFECT -> {
                 haptic(); flashColor = Color(0xFFFACC15); flashAlpha = 0.5f
-                spawnBurst(particles, (fxPack.density * 1.4f).toInt(), Color(0xFFFACC15), 10f, fxPack.particle)
+                spawnBurst(particles, (fxPack.density * fxIntensity * 1.4f).toInt(), Color(0xFFFACC15), 10f, fxPack.particle)
                 shockwaves.add(ShockwaveFx())
             }
             GameViewModel.ToastKind.LEVEL_UP -> {
@@ -218,11 +224,11 @@ fun GameScreen(
             }
             GameViewModel.ToastKind.COMBO -> {
                 hapticLight()
-                spawnBurst(particles, (fxPack.density * 0.5f).toInt().coerceAtLeast(8), Color(0xFF38BDF8), 10f, fxPack.particle)
+                spawnBurst(particles, (fxPack.density * fxIntensity * 0.5f).toInt().coerceAtLeast(8), Color(0xFF38BDF8), 10f, fxPack.particle)
             }
             GameViewModel.ToastKind.RECORD -> {
                 haptic(); flashColor = Color(0xFFFCD34D); flashAlpha = 0.5f
-                spawnBurst(particles, (fxPack.density * 1.6f).toInt(), Color(0xFFFCD34D), 10f, fxPack.particle)
+                spawnBurst(particles, (fxPack.density * fxIntensity * 1.6f).toInt(), Color(0xFFFCD34D), 10f, fxPack.particle)
             }
         }
         bannerVisible = true
@@ -277,6 +283,12 @@ fun GameScreen(
                     r.elapsedMs += dtMs
                     if (r.elapsedMs >= FxMath.RING_DURATION_MS) ringIt.remove()
                 }
+                val trailIt = dropTrails.iterator()
+                while (trailIt.hasNext()) {
+                    val t = trailIt.next()
+                    t.elapsedMs += dtMs
+                    if (t.elapsedMs >= FxMath.TRAIL_DURATION_MS) trailIt.remove()
+                }
                 if (shakeElapsed < shakeDur) {
                     shakeElapsed += dtMs
                     val off = FxMath.shakeOffset(shakeElapsed, shakeDur, shakeAmp)
@@ -305,6 +317,19 @@ fun GameScreen(
         shakeElapsed = 0f
     }
 
+    // Hard-drop trail (v1.5.0, V3). Fully off under reduced motion.
+    LaunchedEffect(ui.trailSeq) {
+        if (ui.trailSeq == 0 || reducedMotion) return@LaunchedEffect
+        ui.trailSpec?.let { dropTrails.add(DropTrailFx(it)) }
+        if (dropTrails.size > 4) dropTrails.removeAt(0)
+    }
+
+    // Impact dust on piece lock (v1.5.0, V3). Off under reduced motion.
+    LaunchedEffect(ui.lockSeq) {
+        if (ui.lockSeq == 0 || reducedMotion) return@LaunchedEffect
+        spawnImpactDust(particles, ui.lockCells, theme, fxIntensity)
+    }
+
     // Pause on app background; save session.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -328,6 +353,14 @@ fun GameScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(theme.backgroundTop)) {
+        // v1.5.0 (V1): optional image backdrop (tinted photo layer + parallax
+        // stars). Disabling it in settings restores the plain gradient exactly.
+        if (imageBackgrounds) {
+            com.tetrisnewgeneration.game.ui.fx.BackdropLayer(
+                theme = theme,
+                reducedMotion = reducedMotion
+            )
+        }
         // Full-screen gesture layer sits at the BOTTOM of the box: every
         // button, HUD control and dialog above it wins hit-testing first, so
         // gestures only receive touches on empty space — the whole screen
@@ -398,23 +431,39 @@ fun GameScreen(
                 // The board shares the weighted middle slot; full-screen
                 // gestures are handled by the layer at the bottom of the root box.
                 // graphicsLayer applies the v1.3.0 screen shake (C4).
+                // v1.5.0 (V6): the asset-pack frame is used for EVERY theme,
+                // tinted with the theme border colour so each theme stamps
+                // its mark on the board frame itself.
                 Box(
                     modifier = Modifier.weight(1f).fillMaxHeight().graphicsLayer {
                         translationX = shakeX
                         translationY = shakeY
                     }
                 ) {
-                    if (t99) {
-                        // v1.4.0: real board frame stretched behind the canvas.
-                        androidx.compose.foundation.Image(
-                            painter = androidx.compose.ui.res.painterResource(
-                                com.tetrisnewgeneration.game.R.drawable.t99_border
-                            ),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = androidx.compose.ui.layout.ContentScale.FillBounds
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(
+                            com.tetrisnewgeneration.game.R.drawable.t99_border
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                        colorFilter = if (t99) null else androidx.compose.ui.graphics.ColorFilter.tint(
+                            theme.boardBackground,
+                            androidx.compose.ui.graphics.BlendMode.Multiply
                         )
-                    }
+                    )
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(
+                            com.tetrisnewgeneration.game.R.drawable.board_frame_mask
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                            theme.boardBorder,
+                            androidx.compose.ui.graphics.BlendMode.SrcIn
+                        )
+                    )
                     BoardCanvas(
                         theme = theme,
                         boardGrid = ui.board,
@@ -429,6 +478,15 @@ fun GameScreen(
                         shockwaves = shockwaves,
                         comboHeat = FxMath.comboHeat(ui.combo),
                         blockSprites = sprites,
+                        rotationSprites = rotSprites,
+                        activePieceOrigin = ui.activePieceX?.let { x ->
+                            ui.activePieceY?.let { y -> x to y }
+                        },
+                        activeRotation = ui.activeRotation,
+                        dropTrails = dropTrails,
+                        dangerActive = ui.dangerActive,
+                        dangerRows = ui.dangerRows,
+                        fxIntensity = fxIntensity,
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
@@ -440,11 +498,21 @@ fun GameScreen(
                     modifier = Modifier.width(64.dp)
                 ) {
                     Text(stringResource(R.string.hud_next), color = theme.textPrimary, fontSize = 11.sp)
-                    ui.nextQueue.take(3).forEach { idx ->
+                    ui.nextQueue.take(3).forEachIndexed { index, idx ->
                         Box(
                             modifier = Modifier
                                 .size(width = 44.dp, height = 26.dp)
-                                .clip(RoundedCornerShape(8.dp)),
+                                .clip(RoundedCornerShape(8.dp))
+                                .border(
+                                    1.dp,
+                                    // v1.5.0 (V6): the next piece glows while it waits.
+                                    if (index == 0 && !ui.paused && !ui.finished) {
+                                        theme.accent.copy(alpha = 0.8f)
+                                    } else {
+                                        Color.Transparent
+                                    },
+                                    RoundedCornerShape(8.dp)
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             if (t99) {
@@ -618,3 +686,48 @@ internal fun formatTime(ms: Long): String {
 }
 
 internal fun formatNumber(n: Long): String = n.toString()
+
+/** Board-pixel space used by the v1.3.0 particle system (~40 px per cell). */
+internal const val FX_CELL_PX = 40f
+
+/**
+ * v1.5.0 (V3): small dust puff where the piece just landed. 6-10 particles
+ * at MEDIUM intensity (scaled by the effects-intensity factor), spawned at
+ * the bottom edge of the lowest cell of each occupied column.
+ */
+internal fun spawnImpactDust(
+    particles: MutableList<Particle>,
+    lockCells: List<Triple<Int, Int, Int>>,
+    theme: ThemeDef,
+    intensityFactor: Float
+) {
+    if (lockCells.isEmpty()) return
+    val count = FxMath.dustCount(intensityFactor)
+    // Lowest cell per column = the actual contact points with the stack.
+    val contacts = lockCells
+        .groupBy { it.first }
+        .map { (_, colCells) -> colCells.maxBy { it.second } }
+    val rng = Random(System.nanoTime())
+    repeat(count) { i ->
+        val (cx, cy, typeIdx) = contacts[i % contacts.size]
+        particles.add(
+            Particle(
+                x = cx * FX_CELL_PX + FX_CELL_PX / 2f,
+                y = cy * FX_CELL_PX + FX_CELL_PX * 0.9f,
+                vx = (rng.nextFloat() - 0.5f) * 90f,
+                vy = -(20f + rng.nextFloat() * 55f),
+                life = 1f,
+                decay = 2.4f + rng.nextFloat() * 1.2f,
+                size = 1.6f + rng.nextFloat() * 2.4f,
+                color = theme.colorOf(
+                    com.tetrisnewgeneration.game.engine.PieceType.entries
+                        .getOrElse(typeIdx) { com.tetrisnewgeneration.game.engine.PieceType.I }
+                ).copy(alpha = 0.85f),
+                style = com.tetrisnewgeneration.game.themes.ParticleStyle.BURST
+            )
+        )
+    }
+    if (particles.size > 220) {
+        repeat(particles.size - 220) { particles.removeAt(0) }
+    }
+}

@@ -32,6 +32,8 @@ data class PlayerSettings(
     val effectPackId: String = "fx_sparks",
     val soundPackId: String = "sfx_original",
     val gestureControls: Boolean = false,   // optional board gestures; buttons always remain available
+    val effectsIntensity: String = "medium", // v1.5.0 (V8): low | medium | high
+    val imageBackgrounds: Boolean = true,    // v1.5.0 (V1): image backdrop layer on game/home
     val tutorialShown: Boolean = false,
     val coins: Long = 150L,            // starter balance
     val xp: Long = 0L,
@@ -66,6 +68,8 @@ class SettingsStore(private val context: Context) : WalletStore {
         val EFFECT_PACK = stringPreferencesKey("effect_pack_id")
         val SOUND_PACK = stringPreferencesKey("sound_pack_id")
         val GESTURE_CONTROLS = booleanPreferencesKey("gesture_controls")
+        val EFFECTS_INTENSITY = stringPreferencesKey("effects_intensity")
+        val IMAGE_BACKGROUNDS = booleanPreferencesKey("image_backgrounds")
         val TUTORIAL_SHOWN = booleanPreferencesKey("tutorial_shown")
         val COINS = longPreferencesKey("coins")
         val XP = longPreferencesKey("xp")
@@ -89,6 +93,8 @@ class SettingsStore(private val context: Context) : WalletStore {
             effectPackId = p[Keys.EFFECT_PACK] ?: "fx_sparks",
             soundPackId = p[Keys.SOUND_PACK] ?: "sfx_original",
             gestureControls = p[Keys.GESTURE_CONTROLS] ?: false,
+            effectsIntensity = p[Keys.EFFECTS_INTENSITY] ?: "medium",
+            imageBackgrounds = p[Keys.IMAGE_BACKGROUNDS] ?: true,
             tutorialShown = p[Keys.TUTORIAL_SHOWN] ?: false,
             coins = p[Keys.COINS] ?: 150L,
             xp = p[Keys.XP] ?: 0L,
@@ -112,6 +118,8 @@ class SettingsStore(private val context: Context) : WalletStore {
     suspend fun setEffectPackId(value: String) = edit { it[Keys.EFFECT_PACK] = value }
     suspend fun setSoundPackId(value: String) = edit { it[Keys.SOUND_PACK] = value }
     suspend fun setGestureControls(value: Boolean) = edit { it[Keys.GESTURE_CONTROLS] = value }
+    suspend fun setEffectsIntensity(value: String) = edit { it[Keys.EFFECTS_INTENSITY] = value }
+    suspend fun setImageBackgrounds(value: Boolean) = edit { it[Keys.IMAGE_BACKGROUNDS] = value }
     suspend fun setTutorialShown(value: Boolean) = edit { it[Keys.TUTORIAL_SHOWN] = value }
 
     override suspend fun setWallet(coins: Long, xp: Long, playerLevel: Int) = edit {
@@ -142,6 +150,8 @@ class SettingsStore(private val context: Context) : WalletStore {
         it[Keys.EFFECT_PACK] = s.effectPackId
         it[Keys.SOUND_PACK] = s.soundPackId
         it[Keys.GESTURE_CONTROLS] = s.gestureControls
+        it[Keys.EFFECTS_INTENSITY] = s.effectsIntensity
+        it[Keys.IMAGE_BACKGROUNDS] = s.imageBackgrounds
     }
 
     private suspend fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {

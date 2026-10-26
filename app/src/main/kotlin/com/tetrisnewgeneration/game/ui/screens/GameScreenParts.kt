@@ -137,16 +137,24 @@ fun GoalProgress(ui: GameViewModel.UiState, theme: ThemeDef) {
 @Composable
 fun HoldBox(theme: ThemeDef, typeIndex: Int?, canHold: Boolean, t99: Boolean = false) {
     val sprites = if (t99) rememberT99Sprites() else null
+    // v1.5.0 (V6): the hold container glows with the theme accent while the
+    // swap is available, and dims to a muted gray backdrop once consumed.
+    val containerColor = if (canHold) {
+        theme.boardBackground.copy(alpha = 0.9f)
+    } else {
+        Color(0xFF4A4A52).copy(alpha = 0.55f)
+    }
+    val borderColor = when {
+        typeIndex != null && canHold -> theme.accent
+        canHold -> theme.boardBorder
+        else -> theme.boardBorder.copy(alpha = 0.25f)
+    }
     Box(
         modifier = Modifier
             .size(56.dp, 40.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(theme.boardBackground.copy(alpha = 0.9f))
-            .border(
-                1.dp,
-                if (canHold) theme.boardBorder else theme.boardBorder.copy(alpha = 0.25f),
-                RoundedCornerShape(10.dp)
-            ),
+            .background(containerColor)
+            .border(1.dp, borderColor, RoundedCornerShape(10.dp)),
         contentAlignment = Alignment.Center
     ) {
         if (t99) {

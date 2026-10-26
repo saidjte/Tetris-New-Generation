@@ -174,6 +174,13 @@ class DangerTracker(
 ) {
     private var inDanger = false
 
+    /**
+     * v1.5.0 (V4): current danger state, exposed so the VISUAL danger glow
+     * flips in the exact same ViewModel tick (and therefore the same logical
+     * frame) as the DANGER/SAVED voice events.
+     */
+    val active: Boolean get() = inDanger
+
     /** @return DANGER / SAVED voice events on state transitions, else null. */
     fun update(stackHeightRows: Int): VoiceEvent? {
         if (!inDanger && stackHeightRows >= enterRows) {
