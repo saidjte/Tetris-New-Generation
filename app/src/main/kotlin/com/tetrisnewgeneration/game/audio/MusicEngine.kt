@@ -6,9 +6,11 @@ import android.media.MediaPlayer
 import com.tetrisnewgeneration.game.R
 
 /**
- * Looping background music from local resources (v1.4.0: real tracks
- * provided by the game owner — menu theme, in-game "Type A" and the more
- * intense "Type B"; Zen keeps its calm synthesized loop). Playback pauses
+ * Looping background music from local resources (v1.8.0: the in-game themes
+ * are original in-style arrangements of the public-domain Korobeiniki melody
+ * — a driving "Type A" for normal rounds and a faster, darker variant for
+ * danger/level 8, rendered as OGG for tight MediaPlayer loops; the menu theme
+ * and Zen loop keep their earlier tracks). Playback pauses
  * automatically when the app goes to background (caller wires lifecycle),
  * volume follows the player's settings, and nothing is streamed.
  */
