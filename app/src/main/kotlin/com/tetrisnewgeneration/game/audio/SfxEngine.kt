@@ -19,7 +19,8 @@ class SfxEngine(private val context: Context) {
         MOVE, ROTATE, DROP, LOCK, CLEAR, CLEAR_DOUBLE, CLEAR_TRIPLE, TETRIS,
         COMBO, LEVEL_UP, ACHIEVE, REWARD, UNLOCK, ROUND_OVER, WIN, CLICK,
         COUNTDOWN, GO,
-        HOLD, TSPIN, TSPIN_DOUBLE, TSPIN_TRIPLE, DANGER, SAVE, RECORD
+        HOLD, TSPIN, TSPIN_DOUBLE, TSPIN_TRIPLE, DANGER, SAVE, RECORD,
+        PERFECT, B2B   // v1.6.0 (A5): dedicated perfect-clear / back-to-back
     }
 
     private fun suffix(sound: Sound): String = SfxSoundMap.suffix(sound)
@@ -51,16 +52,23 @@ class SfxEngine(private val context: Context) {
         }
     }
 
-    fun play(sound: Sound) {
+    /**
+     * v1.6.0 (A2): [rate] re-pitches the sample (SoundPool rate 0.5–2.0),
+     * driving the combo-pitch escalation. v1.6.0 (A7): [fromPack] plays the
+     * sound from an arbitrary pack without switching the active one (store
+     * previews); cached entries are keyed by pack so nothing leaks between
+     * packs.
+     */
+    fun play(sound: Sound, rate: Float = 1f, fromPack: String? = null) {
         if (!enabled) return
-        val entry = resolve(sound) ?: return
-        pool.play(entry.soundId, volume, volume, 1, 0, 1f)
+        val entry = resolve(sound, fromPack ?: packId) ?: return
+        pool.play(entry.soundId, volume, volume, 1, 0, rate.coerceIn(0.5f, 2f))
     }
 
-    private fun resolve(sound: Sound): Loaded? {
+    private fun resolve(sound: Sound, pack: String): Loaded? {
         var s: Sound? = sound
         while (s != null) {
-            val key = "${packId}_${suffix(s)}"
+            val key = "${pack}_${suffix(s)}"
             loaded[key]?.let { return it }
             val resId = context.resources.getIdentifier(key, "raw", context.packageName)
             if (resId != 0) {

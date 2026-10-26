@@ -37,6 +37,8 @@
     <string name="hud_level">Level</string>
     <string name="hud_lines">Lines</string>
     <string name="hud_time">Time</string>
+    <string name="summary_max_combo">Best combo</string>
+    <string name="summary_tetrises">Tetrises</string>
     <string name="hud_next">Next</string>
     <string name="hud_hold">Hold</string>
     <string name="hud_goal">Goal</string>
@@ -82,6 +84,7 @@
     <string name="store_buy">Buy</string>
     <string name="store_select">Select</string>
     <string name="store_selected">Selected</string>
+    <string name="store_preview_sound">Preview sound</string>
     <string name="store_confirm_buy">Confirm purchase</string>
     <string name="store_confirm_buy_msg">Buy %1$s for %2$d coins?</string>
     <string name="store_not_enough">Not enough coins</string>

@@ -21,6 +21,8 @@ object SfxSoundMap {
         SfxEngine.Sound.TETRIS -> "tetris"
         SfxEngine.Sound.TSPIN_DOUBLE -> "tspin2"
         SfxEngine.Sound.TSPIN_TRIPLE -> "tspin3"
+        SfxEngine.Sound.PERFECT -> "perfect"   // v1.6.0 (A5)
+        SfxEngine.Sound.B2B -> "b2b"           // v1.6.0 (A5)
         else -> sound.name.lowercase()
     }
 
@@ -38,6 +40,8 @@ object SfxSoundMap {
         SfxEngine.Sound.REWARD -> SfxEngine.Sound.SAVE
         SfxEngine.Sound.UNLOCK -> SfxEngine.Sound.LEVEL_UP
         SfxEngine.Sound.COMBO -> SfxEngine.Sound.CLEAR
+        SfxEngine.Sound.PERFECT -> SfxEngine.Sound.TETRIS
+        SfxEngine.Sound.B2B -> SfxEngine.Sound.COMBO
         else -> null
     }
 

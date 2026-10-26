@@ -597,6 +597,10 @@ fun RoundSummaryDialog(
             SummaryRow(stringResource(R.string.hud_lines), ui.lines.toString(), theme)
             SummaryRow(stringResource(R.string.hud_level), ui.level.toString(), theme)
             SummaryRow(stringResource(R.string.hud_time), formatTime(ui.elapsedMs), theme)
+            // v1.6.0 (U1): the engine always tracked these — the summary
+            // finally shows them.
+            SummaryRow(stringResource(R.string.summary_max_combo), ui.maxCombo.toString(), theme)
+            SummaryRow(stringResource(R.string.summary_tetrises), ui.tetrises.toString(), theme)
 
             Spacer(Modifier.height(12.dp))
 

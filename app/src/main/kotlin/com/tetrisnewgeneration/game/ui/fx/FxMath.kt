@@ -142,6 +142,23 @@ object FxMath {
         return 0.5f + 0.5f * sin(phase * 2f * PI.toFloat())
     }
 
+    // --------------------------------------- combo chip sync (v1.6.0, V5)
+
+    /**
+     * Scale of the HUD combo chip, driven by the SAME combo-pitch ramp the
+     * sound uses ([com.tetrisnewgeneration.game.audio.ComboPitch.rateFor]) —
+     * sound and visuals stay in sync from one source of truth. A rate of
+     * 1.0 (chain start) keeps the chip at rest; the max rate scales it to
+     * 1.12. Non-positive rates are treated as rest.
+     */
+    const val COMBO_CHIP_MAX_SCALE = 1.12f
+
+    fun comboChipScale(rate: Float?): Float {
+        if (rate == null || rate <= 1f) return 1f
+        val t = ((rate - 1f) / 0.5f).coerceIn(0f, 1f)
+        return 1f + (COMBO_CHIP_MAX_SCALE - 1f) * t
+    }
+
     // ------------------------------------------- impact dust (v1.5.0, V3)
 
     /**

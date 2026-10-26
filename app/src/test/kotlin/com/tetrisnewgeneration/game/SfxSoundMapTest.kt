@@ -54,4 +54,28 @@ class SfxSoundMapTest {
         assertEquals(null, SfxSoundMap.fallback(SfxEngine.Sound.MOVE))
         assertEquals(null, SfxSoundMap.fallback(SfxEngine.Sound.CLEAR))
     }
+
+    @Test
+    fun `v1_6_0 perfect and b2b have real files and clean fallbacks`() {
+        // The four synthesized packs ship dedicated files for both events.
+        assertEquals("perfect", SfxSoundMap.suffix(SfxEngine.Sound.PERFECT))
+        assertEquals("b2b", SfxSoundMap.suffix(SfxEngine.Sound.B2B))
+        // Chains: PERFECT -> TETRIS -> CLEAR, B2B -> COMBO -> CLEAR.
+        assertEquals(
+            listOf(
+                SfxEngine.Sound.PERFECT,
+                SfxEngine.Sound.TETRIS,
+                SfxEngine.Sound.CLEAR
+            ),
+            SfxSoundMap.chain(SfxEngine.Sound.PERFECT)
+        )
+        assertEquals(
+            listOf(
+                SfxEngine.Sound.B2B,
+                SfxEngine.Sound.COMBO,
+                SfxEngine.Sound.CLEAR
+            ),
+            SfxSoundMap.chain(SfxEngine.Sound.B2B)
+        )
+    }
 }

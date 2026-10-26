@@ -37,6 +37,8 @@
     <string name="hud_level">المستوى</string>
     <string name="hud_lines">الصفوف</string>
     <string name="hud_time">الوقت</string>
+    <string name="summary_max_combo">أعلى سلسلة</string>
+    <string name="summary_tetrises">تتريس</string>
     <string name="hud_next">التالي</string>
     <string name="hud_hold">محفوظة</string>
     <string name="hud_goal">الهدف</string>
@@ -82,6 +84,7 @@
     <string name="store_buy">شراء</string>
     <string name="store_select">تطبيق</string>
     <string name="store_selected">مُطبَّق</string>
+    <string name="store_preview_sound">معاينة الصوت</string>
     <string name="store_confirm_buy">تأكيد الشراء</string>
     <string name="store_confirm_buy_msg">شراء %1$s مقابل %2$d عملة؟</string>
     <string name="store_not_enough">العملات غير كافية</string>

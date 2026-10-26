@@ -129,7 +129,11 @@ fun StoreScreen(
                     onBuy = { pendingBuy = item },
                     onSelect = {
                         vm.select(item)
-                    }
+                    },
+                    // v1.6.0 (A7): sound packs get an audible try-before-buy.
+                    onPreview = if (item.category == Category.SOUND_PACK) {
+                        { vm.previewSoundPack(item.id) }
+                    } else null
                 )
             }
         }
@@ -233,7 +237,8 @@ private fun StoreCard(
     owned: Boolean,
     selected: Boolean,
     onBuy: () -> Unit,
-    onSelect: () -> Unit
+    onSelect: () -> Unit,
+    onPreview: (() -> Unit)? = null
 ) {
     val shape = RoundedCornerShape(16.dp)
     Column(
@@ -249,6 +254,27 @@ private fun StoreCard(
     ) {
         // Preview swatch
         StorePreview(item, theme, modifier = Modifier.fillMaxWidth().height(64.dp))
+
+        // v1.6.0 (A7): audible preview for sound-pack cards.
+        if (onPreview != null) {
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(theme.accent.copy(alpha = 0.10f))
+                    .clickable { onPreview() }
+                    .padding(vertical = 5.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    stringResource(R.string.store_preview_sound),
+                    color = theme.accent,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
 
         Spacer(Modifier.height(8.dp))
         Text(

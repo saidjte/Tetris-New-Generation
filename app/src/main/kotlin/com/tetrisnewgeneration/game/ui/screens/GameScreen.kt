@@ -200,34 +200,34 @@ fun GameScreen(
         }
         when (kind) {
             GameViewModel.ToastKind.TETRIS -> {
-                haptic(); flashColor = Color(0xFF22D3EE); flashAlpha = 0.45f
+                haptic(); flashColor = Color(0xFF22D3EE); flashAlpha = 0.45f * fxIntensity
                 spawnBurst(particles, (fxPack.density * fxIntensity * 1.2f).toInt(), Color(0xFF22D3EE), 10f, fxPack.particle)
                 shockwaves.add(ShockwaveFx())
             }
             GameViewModel.ToastKind.TSPIN -> {
-                haptic(); flashColor = Color(0xFFA855F7); flashAlpha = 0.38f
+                haptic(); flashColor = Color(0xFFA855F7); flashAlpha = 0.38f * fxIntensity
                 spawnBurst(particles, (fxPack.density * fxIntensity * 0.9f).toInt(), Color(0xFFA855F7), 10f, fxPack.particle)
             }
             GameViewModel.ToastKind.TSPIN_MINI -> {
-                hapticLight(); flashColor = Color(0xFFC084FC); flashAlpha = 0.28f
+                hapticLight(); flashColor = Color(0xFFC084FC); flashAlpha = 0.28f * fxIntensity
             }
             GameViewModel.ToastKind.B2B -> {
-                haptic(); flashColor = Color(0xFFF97316); flashAlpha = 0.32f
+                haptic(); flashColor = Color(0xFFF97316); flashAlpha = 0.32f * fxIntensity
             }
             GameViewModel.ToastKind.PERFECT -> {
-                haptic(); flashColor = Color(0xFFFACC15); flashAlpha = 0.5f
+                haptic(); flashColor = Color(0xFFFACC15); flashAlpha = 0.5f * fxIntensity
                 spawnBurst(particles, (fxPack.density * fxIntensity * 1.4f).toInt(), Color(0xFFFACC15), 10f, fxPack.particle)
                 shockwaves.add(ShockwaveFx())
             }
             GameViewModel.ToastKind.LEVEL_UP -> {
-                hapticLight(); flashColor = Color(0xFF4ADE80); flashAlpha = 0.3f
+                hapticLight(); flashColor = Color(0xFF4ADE80); flashAlpha = 0.3f * fxIntensity
             }
             GameViewModel.ToastKind.COMBO -> {
                 hapticLight()
                 spawnBurst(particles, (fxPack.density * fxIntensity * 0.5f).toInt().coerceAtLeast(8), Color(0xFF38BDF8), 10f, fxPack.particle)
             }
             GameViewModel.ToastKind.RECORD -> {
-                haptic(); flashColor = Color(0xFFFCD34D); flashAlpha = 0.5f
+                haptic(); flashColor = Color(0xFFFCD34D); flashAlpha = 0.5f * fxIntensity
                 spawnBurst(particles, (fxPack.density * fxIntensity * 1.6f).toInt(), Color(0xFFFCD34D), 10f, fxPack.particle)
             }
         }
@@ -336,7 +336,9 @@ fun GameScreen(
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             when (event) {
                 androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> {
-                    vm.pauseRound(saveSession = true)
+                    // v1.6.0 (A6): full silence on background — the round
+                    // pauses and saves, music AND the announcer stop at once.
+                    vm.onAppBackgrounded()
                 }
                 androidx.lifecycle.Lifecycle.Event.ON_RESUME -> {
                     // Round stays paused until the player presses resume.
@@ -411,11 +413,20 @@ fun GameScreen(
                     HoldBox(theme, ui.holdType, ui.canHold, t99 = t99)
                     Spacer(Modifier.height(8.dp))
                     if (ui.combo > 0) {
+                        // v1.6.0 (V5): the chip scales with the same combo-
+                        // pitch ramp the sound uses — one source of truth.
+                        val chipScale = FxMath.comboChipScale(
+                            com.tetrisnewgeneration.game.audio.ComboPitch.rateFor(ui.combo)
+                        )
                         Text(
                             stringResource(R.string.hud_combo, ui.combo),
                             color = theme.accent,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            modifier = Modifier.graphicsLayer {
+                                scaleX = chipScale
+                                scaleY = chipScale
+                            }
                         )
                     }
                     ui.movesLeft?.let {

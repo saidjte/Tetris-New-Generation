@@ -52,6 +52,16 @@ class MusicEngine(private val context: Context) {
         current = track
     }
 
+    /**
+     * v1.6.0 (A4): temporarily lower the music (announcer duck). [on] true
+     * applies [DUCK_FACTOR] over the player's volume; false restores it.
+     * Safe to call when nothing is loaded.
+     */
+    fun setDucked(on: Boolean) {
+        val f = if (on) DuckPolicy.DUCK_FACTOR else 1f
+        player?.setVolume(volume * f, volume * f)
+    }
+
     fun pause() {
         if (player?.isPlaying == true) player?.pause()
     }

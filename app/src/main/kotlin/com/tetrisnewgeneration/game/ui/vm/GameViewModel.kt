@@ -4,7 +4,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tetrisnewgeneration.game.TngApp
+import com.tetrisnewgeneration.game.audio.AudioFocusHelper
+import com.tetrisnewgeneration.game.audio.ComboPitch
+import com.tetrisnewgeneration.game.audio.DuckPolicy
 import com.tetrisnewgeneration.game.audio.MusicEngine
+import com.tetrisnewgeneration.game.audio.MusicRouter
 import com.tetrisnewgeneration.game.audio.SfxEngine
 import com.tetrisnewgeneration.game.audio.UiSounds
 import com.tetrisnewgeneration.game.audio.VoiceEngine
@@ -41,6 +45,13 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     private val sfx: SfxEngine get() = container.sfx
     private val music: MusicEngine get() = container.music
     private val voice: VoiceEngine get() = container.voice
+
+    // v1.6.0 (A1): audio focus for the running round.
+    private val focus: AudioFocusHelper = AudioFocusHelper(app).apply {
+        onPauseRound = { pauseRound() }
+        onPauseMusic = { music.pause() }
+        onResumeMusic = { music.resume() }
+    }
 
     data class UiState(
         val config: ModeConfig? = null,
@@ -91,7 +102,8 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         val lockSeq: Int = 0,               // increments on every piece lock
         val lockCells: List<Triple<Int, Int, Int>> = emptyList(), // locked piece cells
         val dangerActive: Boolean = false,  // synced with the audio DangerTracker
-        val dangerRows: Int = 0             // current stack height in rows
+        val dangerRows: Int = 0,            // current stack height in rows
+        val maxCombo: Int = 0               // v1.6.0 (U1): for the round summary
     )
 
     enum class ToastKind { TETRIS, TSPIN, TSPIN_MINI, B2B, PERFECT, LEVEL_UP, RECORD, COMBO }
@@ -120,7 +132,11 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     private var nearFired = false
     private var ultra60Fired = false
     private var ultra30Fired = false
-    private var intenseMusicOn = false
+    // v1.6.0 (A3): last track decided by MusicRouter — switching happens
+    // only when the routed track actually changes (no thrash).
+    private var lastRoutedTrack: MusicEngine.Track? = null
+    // v1.6.0 (A4): one duck timer at a time; a new big moment extends it.
+    private var duckJob: Job? = null
     private var lastActionAt = 0L
     private var lastIdleVoiceAt = 0L
     private var lastZenCalmAt = 0L
@@ -155,7 +171,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         nearFired = false
         ultra60Fired = false
         ultra30Fired = false
-        intenseMusicOn = false
+        lastRoutedTrack = null
         lastActionAt = System.currentTimeMillis()
         lastIdleVoiceAt = 0L
         lastZenCalmAt = System.currentTimeMillis()
@@ -179,7 +195,13 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         playerSettings.let {
             music.applySettings(it.musicEnabled, it.musicVolume)
         }
-        music.play(if (eng.config.zenMode) MusicEngine.Track.ZEN else MusicEngine.Track.PLAY)
+        // v1.6.0 (A3): route the opening track through the same policy the
+        // loop uses, so a restored level-12 round opens intense directly.
+        val openingTrack = MusicRouter.trackFor(eng.config.zenMode, eng.level, dangerActive = false)
+        lastRoutedTrack = openingTrack
+        music.play(openingTrack)
+        // v1.6.0 (A1): the running round owns game audio focus.
+        focus.acquireForRound()
         eng.start()
         // v1.4.0: mode-flavored opening announcement.
         val cfg = eng.config
@@ -217,6 +239,22 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         engine?.pause()
         if (saveSession) persistSession(force = true)
         music.pause()
+        focus.markRoundIdle()
+    }
+
+    /**
+     * v1.6.0 (A6): the app went to the background mid-round — stop
+     * everything audible immediately, WITHOUT the announcer "pause" line,
+     * and keep the session saved for "continue last session".
+     */
+    fun onAppBackgrounded() {
+        if (engine?.state == GameEngine.State.PLAYING) {
+            persistSession(force = true)
+        }
+        engine?.pause()
+        music.pause()
+        voice.quietStop()
+        focus.markRoundIdle()
     }
 
     fun resumeRound() {
@@ -226,7 +264,14 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         playerSettings.let {
             music.applySettings(it.musicEnabled, it.musicVolume)
         }
-        music.play(if (engine?.config?.zenMode == true) MusicEngine.Track.ZEN else MusicEngine.Track.PLAY)
+        val track = MusicRouter.trackFor(
+            engine?.config?.zenMode == true,
+            engine?.level ?: 1,
+            danger.active
+        )
+        lastRoutedTrack = track
+        music.play(track)
+        focus.acquireForRound()
         loopJob?.cancel()
         viewModelScope.launch { runLoop() }
     }
@@ -238,6 +283,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     fun quitToHome() {
         loopJob?.cancel()
         engine = null
+        focus.abandonFromRound()
         voice.quietStop()
         music.play(MusicEngine.Track.MENU)
     }
@@ -310,10 +356,13 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                     lastIdleVoiceAt = wall
                     voice.play(VoiceEvent.IDLE)
                 }
-                // v1.4.0: intensity ramp — the second real track kicks in at level 8.
-                if (!intenseMusicOn && eng.level >= INTENSE_MUSIC_LEVEL) {
-                    intenseMusicOn = true
-                    music.play(MusicEngine.Track.PLAY_INTENSE)
+                // v1.6.0 (A3): one router decides the track — the danger
+                // state and the level-8 ramp now share the same switch, and
+                // the track changes only when the routed result changes.
+                val routed = MusicRouter.trackFor(eng.config.zenMode, eng.level, danger.active)
+                if (routed != lastRoutedTrack) {
+                    lastRoutedTrack = routed
+                    music.play(routed)
                 }
                 _ui.value = buildUiState(eng, _ui.value.bestBefore, _ui.value.newRecord)
             }
@@ -327,6 +376,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         val eng = engine ?: return
         when (eng.state) {
             GameEngine.State.OVER, GameEngine.State.WON -> {
+                focus.abandonFromRound()
                 music.play(MusicEngine.Track.MENU)
                 if (eng.state == GameEngine.State.WON) {
                     sfx.play(SfxEngine.Sound.WIN)
@@ -418,7 +468,9 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                     // per clear size and T-spin tier; older packs fall back.
                     val spinFull = event.tspinKind == TSpinKind.FULL
                     when {
-                        event.perfectClear -> sfx.play(SfxEngine.Sound.CLEAR)
+                        // v1.6.0 (A5): a perfect clear finally has its own
+                        // dedicated sting instead of the plain clear sound.
+                        event.perfectClear -> sfx.play(SfxEngine.Sound.PERFECT)
                         event.lines >= 4 -> sfx.play(SfxEngine.Sound.TETRIS)
                         spinFull && event.lines == 3 -> sfx.play(SfxEngine.Sound.TSPIN_TRIPLE)
                         spinFull && event.lines == 2 -> sfx.play(SfxEngine.Sound.TSPIN_DOUBLE)
@@ -426,6 +478,17 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                         event.lines == 3 -> sfx.play(SfxEngine.Sound.CLEAR_TRIPLE)
                         event.lines == 2 -> sfx.play(SfxEngine.Sound.CLEAR_DOUBLE)
                         event.lines == 1 -> sfx.play(SfxEngine.Sound.CLEAR)
+                    }
+                    // v1.6.0 (A5): back-to-back bonus blip on top of the tier
+                    // sound — deliberate layered reward. Falls back cleanly
+                    // for packs without a dedicated file.
+                    if (event.backToBack && event.lines > 0) {
+                        sfx.play(SfxEngine.Sound.B2B)
+                    }
+                    // v1.6.0 (A2): the combo sample finally plays, climbing
+                    // in pitch with every chain link (null below combo 2).
+                    ComboPitch.rateFor(event.combo)?.let { rate ->
+                        sfx.play(SfxEngine.Sound.COMBO, rate)
                     }
                     // Announcer: one voice per clear, biggest moment wins
                     // (priority: perfect clear > tetris > T-spin > combo > tiers).
@@ -441,7 +504,14 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                         event.backToBack -> VoiceEvent.B2B
                         else -> null
                     }
-                    voiceEvent?.let { voice.play(it, interrupt = event.perfectClear || event.lines >= 4) }
+                    voiceEvent?.let {
+                        voice.play(it, interrupt = event.perfectClear || event.lines >= 4)
+                        // v1.6.0 (A4): big moments duck the music under the
+                        // announcer so the voice carries.
+                        if (DuckPolicy.shouldDuck(event.perfectClear || event.lines >= 4)) {
+                            duckMusicUnderVoice()
+                        }
+                    }
                     if (voiceEvent == null && event.backToBack && event.lines > 0) {
                         voice.play(VoiceEvent.B2B)
                     }
@@ -501,6 +571,20 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
             shakeAmpPx = amplitudePx * fxFactor,
             shakeDurationMs = durationMs
         )
+    }
+
+    /**
+     * v1.6.0 (A4): duck the music while the announcer delivers a big
+     * moment, then restore. Re-entry extends the window instead of
+     * stacking timers — only one duck coroutine is ever alive.
+     */
+    private fun duckMusicUnderVoice() {
+        duckJob?.cancel()
+        duckJob = viewModelScope.launch {
+            music.setDucked(true)
+            delay(DuckPolicy.DUCK_DURATION_MS)
+            music.setDucked(false)
+        }
     }
 
     // v1.5.0 (V3): hard-drop trail + impact-dust plumbing.
@@ -693,11 +777,13 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
             lockSeq = _ui.value.lockSeq,
             lockCells = _ui.value.lockCells,
             dangerActive = lastDangerActive,
-            dangerRows = lastDangerRows
+            dangerRows = lastDangerRows,
+            maxCombo = eng.maxCombo
         )
     }
 
     override fun onCleared() {
+        focus.abandonFromRound()
         persistSession(force = true)
         loopJob?.cancel()
         super.onCleared()
@@ -711,7 +797,6 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         const val IDLE_VOICE_MS = 12_000L
         const val IDLE_VOICE_COOLDOWN_MS = 30_000L
         const val ZEN_CALM_PERIOD_MS = 90_000L
-        const val INTENSE_MUSIC_LEVEL = 8
         const val NEAR_LINES_WINDOW = 4
     }
 }
