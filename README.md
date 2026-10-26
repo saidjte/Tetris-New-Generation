@@ -18,9 +18,13 @@
 
 Grab the latest installable APK from **[GitHub Releases](../../releases)**:
 
-1. Open the [Releases page](../../releases) and download the APK from the **latest release** (currently v1.6.0).
+1. Open the [Releases page](../../releases) and download the APK from the **latest release** (currently v1.6.1).
 2. On your Android phone, open the file and allow *Install unknown apps* for your browser/file manager if asked.
 3. Install and play — no account, no internet, no ads.
+
+> **Stable signature / توقيع ثابت:** since v1.6.1 every release is signed with the same permanent TNG key (SHA-256 fingerprint `d335a7ab…02f0c6`, see [docs/SIGNING.md](docs/SIGNING.md)) — future updates install directly over the installed version. One-time note: versions before v1.6.1 were signed with lost ephemeral keys, so moving to v1.6.1+ requires **one last uninstall**.
+>
+> **توقيع ثابت:** من إصدار v1.6.1 فصاعداً كل إصدار موقّع بنفس المفتاح الدائم، فتُثبَّت التحديثات القادمة فوق بعضها مباشرة. ملاحظة لمرة واحدة: الإصدارات الأقدم موقّعة بمفاتيح مؤقتة ضائعة، فالانتقال إلى v1.6.1 يتطلب **إزالة تثبيت واحدة أخيرة**.
 
 You can also build it yourself (see below) or download the APK artifact from any successful CI run.
 
@@ -122,7 +126,7 @@ Release signing: define `TNG_KEYSTORE`, `TNG_KEYSTORE_PASSWORD`, `TNG_KEY_ALIAS`
 1. Sets up JDK 17 + Android SDK.
 2. Runs all unit tests.
 3. Builds the debug APK and uploads it as a workflow artifact.
-4. On a `v*` tag: builds the release APK, generates an ephemeral keystore when no signing secrets exist, and **publishes a GitHub Release with the APK attached**.
+4. On a `v*` tag: builds the release APK **signed with the stable release keystore restored from Actions secrets** (a fingerprint gate fails the release if the signature is not the permanent TNG key — see [docs/SIGNING.md](docs/SIGNING.md)), and **publishes a GitHub Release with the APK attached**.
 
 To publish a new version — **version-bump policy (mandatory)**: every fix or upgrade MUST change the version number.
 
@@ -141,6 +145,7 @@ A tag that does not match `versionName` fails the build (CI guard). Docs-only ch
 | [docs/AUDIT.md](docs/AUDIT.md) | Evidence-frozen audit log incl. clean-env re-verification & APK inspection / سجل التدقيق بالأدلة |
 | [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md) | Final report: 12 acceptance criteria × evidence + install guide / التقرير النهائي ومصفوفة القبول |
 | [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md) | 10-item on-device QA checklist / قائمة ضبط الجودة على جهازك |
+| [docs/SIGNING.md](docs/SIGNING.md) | Stable release signing: permanent keystore, secrets, fingerprint gate / سياسة التوقيع الثابت ومخزن المفاتيح الدائم |
 
 ## 🧪 Tests / الاختبارات
 

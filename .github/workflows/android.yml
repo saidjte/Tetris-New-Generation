@@ -53,25 +53,48 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
 
       # ---- Release path: only for version tags ----
-      - name: Generate ephemeral release keystore (no secrets configured)
+      # Stable signing: the SAME permanent keystore is restored from Actions secrets
+      # on every release, so updates install over previous versions without uninstall.
+      - name: Restore stable release keystore (from secrets; ephemeral fallback)
         if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          keytool -genkeypair -v \
-            -keystore /tmp/tng-release.keystore \
-            -alias tng \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass "$TNG_LOCAL_PASS" -keypass "$TNG_LOCAL_PASS" \
-            -dname "CN=Tetris New Generation, OU=CI, O=TNG"
-          echo "TNG_KEYSTORE=/tmp/tng-release.keystore" >> $GITHUB_ENV
-          echo "TNG_KEYSTORE_PASSWORD=$TNG_LOCAL_PASS" >> $GITHUB_ENV
-          echo "TNG_KEY_ALIAS=tng" >> $GITHUB_ENV
-          echo "TNG_KEY_PASSWORD=$TNG_LOCAL_PASS" >> $GITHUB_ENV
         env:
-          TNG_LOCAL_PASS: ${{ secrets.TNG_SIGNING_PASS || 'tng-ci-ephemeral-key' }}
+          TNG_KEYSTORE_B64: ${{ secrets.TNG_KEYSTORE_B64 }}
+          TNG_KEYSTORE_PASSWORD: ${{ secrets.TNG_KEYSTORE_PASSWORD }}
+          TNG_KEY_ALIAS: ${{ secrets.TNG_KEY_ALIAS }}
+          TNG_KEY_PASSWORD: ${{ secrets.TNG_KEY_PASSWORD }}
+        run: |
+          if [ -n "$TNG_KEYSTORE_B64" ]; then
+            printf '%s' "$TNG_KEYSTORE_B64" | base64 -d > /tmp/tng-release.keystore
+            echo "Signing with the STABLE release keystore (fingerprint stable across releases)."
+          else
+            echo "::warning::TNG_KEYSTORE_B64 secret missing — falling back to an ephemeral key (signature will change!)."
+            keytool -genkeypair -v \
+              -keystore /tmp/tng-release.keystore \
+              -alias tng \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$TNG_KEYSTORE_PASSWORD" -keypass "$TNG_KEY_PASSWORD" \
+              -dname "CN=Tetris New Generation, OU=CI, O=TNG"
+          fi
+          echo "TNG_KEYSTORE=/tmp/tng-release.keystore" >> $GITHUB_ENV
+          echo "TNG_KEYSTORE_PASSWORD=$TNG_KEYSTORE_PASSWORD" >> $GITHUB_ENV
+          echo "TNG_KEY_ALIAS=$TNG_KEY_ALIAS" >> $GITHUB_ENV
+          echo "TNG_KEY_PASSWORD=$TNG_KEY_PASSWORD" >> $GITHUB_ENV
 
       - name: Assemble release APK
         if: startsWith(github.ref, 'refs/tags/v')
         run: gradle :app:assembleRelease --stacktrace
+
+      - name: Verify release signature is stable (fingerprint gate)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          APK=app/build/outputs/apk/release/app-release.apk
+          ${ANDROID_HOME}/build-tools/34.0.0/apksigner verify --print-certs "$APK" | sed 's/^/  /'
+          if ${ANDROID_HOME}/build-tools/34.0.0/apksigner verify --print-certs "$APK" | grep -q 'SHA-256 digest: d335a7ab1d8f59cfb6e3b8662ab91ff8f59cd45961a7b6ae867b7c1ffa02f0c6'; then
+            echo "STABLE SIGNATURE CONFIRMED (TNG permanent release key)."
+          else
+            echo "::error::Signature fingerprint differs from the stable TNG key — updates would not install over previous releases. Check the signing secrets!"
+            exit 1
+          fi
 
       - name: Publish GitHub Release with APK
         if: startsWith(github.ref, 'refs/tags/v')
@@ -84,7 +107,7 @@ jobs:
 
             - Installable offline APK (Android 7.0+)
             - Built by GitHub Actions from tag ${{ github.ref_name }}
-            - If no signing secrets were configured, the APK is signed with a CI-generated key
+            - Signed with the STABLE TNG release key — updates install over previous versions
 
             حمّل الملف أدناه وثبّته على هاتفك؛ اللعبة تعمل دون إنترنت بالكامل.
           draft: false
