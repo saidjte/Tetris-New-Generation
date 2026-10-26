@@ -78,13 +78,11 @@
     <string name="store_tab_themes">الثيمات</string>
     <string name="store_tab_blocks">القطع</string>
     <string name="store_tab_effects">المؤثرات</string>
-    <string name="store_tab_sounds">الأصوات</string>
     <string name="store_owned">مملوك</string>
     <string name="store_free">مجاني</string>
     <string name="store_buy">شراء</string>
     <string name="store_select">تطبيق</string>
     <string name="store_selected">مُطبَّق</string>
-    <string name="store_preview_sound">معاينة الصوت</string>
     <string name="store_confirm_buy">تأكيد الشراء</string>
     <string name="store_confirm_buy_msg">شراء %1$s مقابل %2$d عملة؟</string>
     <string name="store_not_enough">العملات غير كافية</string>

@@ -51,8 +51,10 @@ import com.tetrisnewgeneration.game.ui.components.localizedText
 import com.tetrisnewgeneration.game.ui.vm.StoreViewModel
 
 /**
- * Local store: themes, block packs, effect packs and sound packs bought with
- * in-game coins. Includes previews, confirm dialogs and equip/selected states.
+ * Local store: themes, block packs and effect packs bought with in-game
+ * coins. Includes confirm dialogs and equip/selected states.
+ * v1.7.0: the sounds tab is gone — Tetris 99 recordings are the free base
+ * sound of the game, not merchandise.
  */
 @Composable
 fun StoreScreen(
@@ -72,7 +74,7 @@ fun StoreScreen(
         onDispose { com.tetrisnewgeneration.game.audio.UiSounds.back() }
     }
 
-    val categories = listOf(Category.THEME, Category.BLOCK_PACK, Category.EFFECT_PACK, Category.SOUND_PACK)
+    val categories = listOf(Category.THEME, Category.BLOCK_PACK, Category.EFFECT_PACK)
     val filtered = items.filter { it.category == categories[tab] }
 
     Column(
@@ -102,8 +104,7 @@ fun StoreScreen(
             val labels = listOf(
                 stringResource(R.string.store_tab_themes),
                 stringResource(R.string.store_tab_blocks),
-                stringResource(R.string.store_tab_effects),
-                stringResource(R.string.store_tab_sounds)
+                stringResource(R.string.store_tab_effects)
             )
             labels.forEachIndexed { i, label ->
                 Tab(selected = tab == i, onClick = {
@@ -129,11 +130,7 @@ fun StoreScreen(
                     onBuy = { pendingBuy = item },
                     onSelect = {
                         vm.select(item)
-                    },
-                    // v1.6.0 (A7): sound packs get an audible try-before-buy.
-                    onPreview = if (item.category == Category.SOUND_PACK) {
-                        { vm.previewSoundPack(item.id) }
-                    } else null
+                    }
                 )
             }
         }
@@ -204,31 +201,12 @@ private fun displayName(item: StoreItem): String = when (item.category) {
     Category.EFFECT_PACK -> PackDefs.effectPacks.firstOrNull { it.id == item.id }?.let {
         localizedTextStatic(it.nameAr, it.nameEn)
     } ?: item.id
-    Category.SOUND_PACK -> localizedTextStatic(soundPackNameAr(item.id), soundPackNameEn(item.id))
 }
 
 private fun localizedTextStatic(ar: String, en: String): String = try {
     val loc = java.util.Locale.getDefault()
     if (loc.language == "ar") ar else en
 } catch (_: Exception) { en }
-
-private fun soundPackNameAr(id: String) = when (id) {
-    "sfx_original" -> "أصوات أصلية"
-    "sfx_arcade" -> "أصوات أركيد"
-    "sfx_future" -> "أصوات مستقبلية"
-    "sfx_calm" -> "أصوات هادئة"
-    "sfx_t99" -> "أصوات T99"
-    else -> id
-}
-
-private fun soundPackNameEn(id: String) = when (id) {
-    "sfx_original" -> "Original Sounds"
-    "sfx_arcade" -> "Arcade Sounds"
-    "sfx_future" -> "Future Sounds"
-    "sfx_calm" -> "Calm Sounds"
-    "sfx_t99" -> "T99 Sounds"
-    else -> id
-}
 
 @Composable
 private fun StoreCard(
@@ -237,8 +215,7 @@ private fun StoreCard(
     owned: Boolean,
     selected: Boolean,
     onBuy: () -> Unit,
-    onSelect: () -> Unit,
-    onPreview: (() -> Unit)? = null
+    onSelect: () -> Unit
 ) {
     val shape = RoundedCornerShape(16.dp)
     Column(
@@ -254,27 +231,6 @@ private fun StoreCard(
     ) {
         // Preview swatch
         StorePreview(item, theme, modifier = Modifier.fillMaxWidth().height(64.dp))
-
-        // v1.6.0 (A7): audible preview for sound-pack cards.
-        if (onPreview != null) {
-            Spacer(Modifier.height(6.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(theme.accent.copy(alpha = 0.10f))
-                    .clickable { onPreview() }
-                    .padding(vertical = 5.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    stringResource(R.string.store_preview_sound),
-                    color = theme.accent,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
 
         Spacer(Modifier.height(8.dp))
         Text(
@@ -379,20 +335,6 @@ private fun StorePreview(item: StoreItem, theme: ThemeDef, modifier: Modifier = 
                             modifier = Modifier
                                 .size((6 + i * 3).dp)
                                 .background(color.copy(alpha = 0.35f + i * 0.15f), CircleShape)
-                        )
-                    }
-                }
-            }
-            Category.SOUND_PACK -> {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(3.dp)
-                ) {
-                    listOf(8, 16, 10, 20, 12).forEach { h ->
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp, h.dp)
-                                .background(theme.accent.copy(alpha = 0.8f), RoundedCornerShape(3.dp))
                         )
                     }
                 }

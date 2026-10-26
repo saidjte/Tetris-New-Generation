@@ -4,14 +4,12 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tetrisnewgeneration.game.TngApp
-import com.tetrisnewgeneration.game.audio.SfxEngine
 import com.tetrisnewgeneration.game.data.repo.PurchaseResult
 import com.tetrisnewgeneration.game.data.repo.ProgressRepository
 import com.tetrisnewgeneration.game.data.settings.PlayerSettings
 import com.tetrisnewgeneration.game.progression.AchievementDef
 import com.tetrisnewgeneration.game.progression.DailyTaskDef
 import com.tetrisnewgeneration.game.store.StoreItem
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -26,7 +24,6 @@ class StoreViewModel(app: Application) : AndroidViewModel(app) {
     private val store get() = container.storeRepository
     private val settings get() = container.settings
     private val progress get() = container.progressRepository
-    private val sfx get() = container.sfx
 
     private val _items = MutableStateFlow<List<StoreItem>>(emptyList())
     val items: StateFlow<List<StoreItem>> = _items
@@ -48,23 +45,7 @@ class StoreViewModel(app: Application) : AndroidViewModel(app) {
     fun isSelected(itemId: String, current: PlayerSettings): Boolean = when {
         itemId.startsWith("blocks_") -> current.blockPackId == itemId
         itemId.startsWith("fx_") -> current.effectPackId == itemId
-        itemId.startsWith("sfx_") -> current.soundPackId == itemId
         else -> current.themeId == itemId
-    }
-
-    /**
-     * v1.6.0 (A7): audible store preview — plays a two-sting demo (clear,
-     * then tetris) straight from the given pack WITHOUT switching the
-     * active one. Honest limit: SoundPool loads asynchronously, so the
-     * very first tap on a pack that was never loaded can arrive silent;
-     * the second tap always sounds.
-     */
-    fun previewSoundPack(packId: String) {
-        viewModelScope.launch {
-            sfx.play(SfxEngine.Sound.CLEAR, fromPack = packId)
-            delay(300)
-            sfx.play(SfxEngine.Sound.TETRIS, fromPack = packId)
-        }
     }
 
     /** Applies an owned item as the active customization. */
@@ -74,7 +55,6 @@ class StoreViewModel(app: Application) : AndroidViewModel(app) {
             when {
                 item.id.startsWith("blocks_") -> settings.setBlockPackId(item.id)
                 item.id.startsWith("fx_") -> settings.setEffectPackId(item.id)
-                item.id.startsWith("sfx_") -> settings.setSoundPackId(item.id)
                 else -> settings.setThemeId(item.id)
             }
             _settings.value = settings.current()

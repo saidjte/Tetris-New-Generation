@@ -138,39 +138,9 @@
   "free": false
  },
  {
-  "id": "sfx_original",
-  "category": "SOUND_PACK",
-  "price": 0,
-  "free": true
- },
- {
-  "id": "sfx_arcade",
-  "category": "SOUND_PACK",
-  "price": 80,
-  "free": false
- },
- {
-  "id": "sfx_future",
-  "category": "SOUND_PACK",
-  "price": 90,
-  "free": false
- },
- {
-  "id": "sfx_calm",
-  "category": "SOUND_PACK",
-  "price": 80,
-  "free": false
- },
- {
   "id": "blocks_t99",
   "category": "BLOCK_PACK",
   "price": 130,
-  "free": false
- },
- {
-  "id": "sfx_t99",
-  "category": "SOUND_PACK",
-  "price": 150,
   "free": false
  }
 ]

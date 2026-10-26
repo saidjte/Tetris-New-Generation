@@ -7,11 +7,12 @@ import com.tetrisnewgeneration.game.R
 
 /**
  * Local SFX playback. Sounds are bundled resources (res/raw), organized in
- * selectable packs. Packs ship different file sets: the v1.4.0 "T99" pack
- * (real arcade recordings) has dedicated sounds for every clear tier,
- * T-spin tiers, danger/relief and records, while the four synthesized packs
- * only cover the base events — [fallback] bridges the gap so every pack
- * keeps working without missing files.
+ * packs. Since v1.7.0 the game speaks with ONE voice: the v1.4.0 "T99" pack
+ * (real arcade recordings) — it has dedicated sounds for every clear tier,
+ * T-spin tiers, danger/relief and records, and the pure fallback chain
+ * ([SfxSoundMap]) bridges the few remaining events (combo → clear,
+ * perfect → tetris, b2b → combo). The former selectable synthesized packs
+ * are no longer shipped: sounds are the game's identity, not merchandise.
  */
 class SfxEngine(private val context: Context) {
 
@@ -41,7 +42,13 @@ class SfxEngine(private val context: Context) {
     private val loaded = HashMap<String, Loaded>()
     private var volume = 0.8f
     private var enabled = true
-    private var packId = "sfx_original"
+
+    companion object {
+        /** v1.7.0: the one base sound pack (real T99 recordings). */
+        const val BASE_PACK_ID = "sfx_t99"
+    }
+
+    private var packId = BASE_PACK_ID
 
     fun applySettings(enabled: Boolean, volume: Float, packId: String) {
         this.enabled = enabled
@@ -54,14 +61,11 @@ class SfxEngine(private val context: Context) {
 
     /**
      * v1.6.0 (A2): [rate] re-pitches the sample (SoundPool rate 0.5–2.0),
-     * driving the combo-pitch escalation. v1.6.0 (A7): [fromPack] plays the
-     * sound from an arbitrary pack without switching the active one (store
-     * previews); cached entries are keyed by pack so nothing leaks between
-     * packs.
+     * driving the combo-pitch escalation.
      */
-    fun play(sound: Sound, rate: Float = 1f, fromPack: String? = null) {
+    fun play(sound: Sound, rate: Float = 1f) {
         if (!enabled) return
-        val entry = resolve(sound, fromPack ?: packId) ?: return
+        val entry = resolve(sound, packId) ?: return
         pool.play(entry.soundId, volume, volume, 1, 0, rate.coerceIn(0.5f, 2f))
     }
 

@@ -7,9 +7,13 @@ import kotlinx.serialization.json.Json
 /**
  * Store item types. Everything is bought with locally earned coins; no real
  * payments, no server, no downloads — content ships inside the APK.
+ *
+ * v1.7.0: SOUND_PACK was removed from the store entirely — sounds are no
+ * longer merchandise. Tetris 99's recordings are THE base (and only) sound
+ * identity of the game, free for everyone from the first launch.
  */
 @Serializable
-enum class Category { THEME, BLOCK_PACK, EFFECT_PACK, SOUND_PACK }
+enum class Category { THEME, BLOCK_PACK, EFFECT_PACK }
 
 @Serializable
 data class StoreItem(
@@ -52,13 +56,8 @@ object StoreCatalog {
         StoreItem("fx_burst", Category.EFFECT_PACK, 70),
         StoreItem("fx_trail", Category.EFFECT_PACK, 70),
         StoreItem("fx_shatter", Category.EFFECT_PACK, 90),
-        StoreItem("fx_confetti", Category.EFFECT_PACK, 100),
-        // Sound packs
-        StoreItem("sfx_original", Category.SOUND_PACK, 0, free = true),
-        StoreItem("sfx_arcade", Category.SOUND_PACK, 80),
-        StoreItem("sfx_future", Category.SOUND_PACK, 90),
-        StoreItem("sfx_calm", Category.SOUND_PACK, 80),
-        StoreItem("sfx_t99", Category.SOUND_PACK, 150)
+        StoreItem("fx_confetti", Category.EFFECT_PACK, 100)
+        // v1.7.0: sound packs are gone from the store — T99 sounds are the free base.
     )
 
     fun fromJson(text: String): List<StoreItem>? = try {

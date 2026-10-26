@@ -30,7 +30,7 @@ data class PlayerSettings(
     val themeId: String = "classic_night",
     val blockPackId: String = "blocks_standard",
     val effectPackId: String = "fx_sparks",
-    val soundPackId: String = "sfx_original",
+    val soundPackId: String = "sfx_t99",   // v1.7.0: T99 recordings are THE base sound (pinned)
     val gestureControls: Boolean = false,   // optional board gestures; buttons always remain available
     val effectsIntensity: String = "medium", // v1.5.0 (V8): low | medium | high
     val imageBackgrounds: Boolean = true,    // v1.5.0 (V1): image backdrop layer on game/home
@@ -66,7 +66,9 @@ class SettingsStore(private val context: Context) : WalletStore {
         val THEME = stringPreferencesKey("theme_id")
         val BLOCK_PACK = stringPreferencesKey("block_pack_id")
         val EFFECT_PACK = stringPreferencesKey("effect_pack_id")
-        val SOUND_PACK = stringPreferencesKey("sound_pack_id")
+        // v1.7.0: the sound_pack_id preference key is intentionally retired —
+        // the pack is pinned below, so any value stored by an older install
+        // (e.g. "sfx_original") is ignored: everyone migrates to T99.
         val GESTURE_CONTROLS = booleanPreferencesKey("gesture_controls")
         val EFFECTS_INTENSITY = stringPreferencesKey("effects_intensity")
         val IMAGE_BACKGROUNDS = booleanPreferencesKey("image_backgrounds")
@@ -91,7 +93,9 @@ class SettingsStore(private val context: Context) : WalletStore {
             themeId = p[Keys.THEME] ?: "classic_night",
             blockPackId = p[Keys.BLOCK_PACK] ?: "blocks_standard",
             effectPackId = p[Keys.EFFECT_PACK] ?: "fx_sparks",
-            soundPackId = p[Keys.SOUND_PACK] ?: "sfx_original",
+            // v1.7.0: sounds are no longer selectable — T99 is the base for
+            // every player, ignoring any pack stored by a previous version.
+            soundPackId = "sfx_t99",
             gestureControls = p[Keys.GESTURE_CONTROLS] ?: false,
             effectsIntensity = p[Keys.EFFECTS_INTENSITY] ?: "medium",
             imageBackgrounds = p[Keys.IMAGE_BACKGROUNDS] ?: true,
@@ -116,7 +120,6 @@ class SettingsStore(private val context: Context) : WalletStore {
     suspend fun setThemeId(value: String) = edit { it[Keys.THEME] = value }
     suspend fun setBlockPackId(value: String) = edit { it[Keys.BLOCK_PACK] = value }
     suspend fun setEffectPackId(value: String) = edit { it[Keys.EFFECT_PACK] = value }
-    suspend fun setSoundPackId(value: String) = edit { it[Keys.SOUND_PACK] = value }
     suspend fun setGestureControls(value: Boolean) = edit { it[Keys.GESTURE_CONTROLS] = value }
     suspend fun setEffectsIntensity(value: String) = edit { it[Keys.EFFECTS_INTENSITY] = value }
     suspend fun setImageBackgrounds(value: Boolean) = edit { it[Keys.IMAGE_BACKGROUNDS] = value }
@@ -148,7 +151,6 @@ class SettingsStore(private val context: Context) : WalletStore {
         it[Keys.THEME] = s.themeId
         it[Keys.BLOCK_PACK] = s.blockPackId
         it[Keys.EFFECT_PACK] = s.effectPackId
-        it[Keys.SOUND_PACK] = s.soundPackId
         it[Keys.GESTURE_CONTROLS] = s.gestureControls
         it[Keys.EFFECTS_INTENSITY] = s.effectsIntensity
         it[Keys.IMAGE_BACKGROUNDS] = s.imageBackgrounds

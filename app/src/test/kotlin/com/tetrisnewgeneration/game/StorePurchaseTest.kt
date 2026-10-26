@@ -102,6 +102,9 @@ class StorePurchaseTest {
         assertEquals(13, items.count { it.category == Category.THEME })
         assertEquals(6, items.count { it.category == Category.BLOCK_PACK })
         assertEquals(5, items.count { it.category == Category.EFFECT_PACK })
-        assertEquals(5, items.count { it.category == Category.SOUND_PACK })
+        // v1.7.0: sounds left the store — T99 recordings are the free base
+        // sound of the game, so no sound merchandise may exist in any catalog.
+        assertEquals(24, items.size)
+        assertTrue(items.none { it.id.startsWith("sfx_") })
     }
 }

@@ -78,13 +78,11 @@
     <string name="store_tab_themes">Themes</string>
     <string name="store_tab_blocks">Blocks</string>
     <string name="store_tab_effects">Effects</string>
-    <string name="store_tab_sounds">Sounds</string>
     <string name="store_owned">Owned</string>
     <string name="store_free">Free</string>
     <string name="store_buy">Buy</string>
     <string name="store_select">Select</string>
     <string name="store_selected">Selected</string>
-    <string name="store_preview_sound">Preview sound</string>
     <string name="store_confirm_buy">Confirm purchase</string>
     <string name="store_confirm_buy_msg">Buy %1$s for %2$d coins?</string>
     <string name="store_not_enough">Not enough coins</string>
